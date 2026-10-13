@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniverSOS - Gestor Integral de Estudio Universitario</title>
+    
+    <!-- Fuentes Tipográficas -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Configuración y Carga de MathJax v3 -->
+    <script>
+        window.MathJax = {
+            tex: { 
+                inlineMath: [['$', '$'], ['\\(', '\\)']], 
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: { fontCache: 'global' },
+            startup: { 
+                typeset: false,
+                ready: () => {
+                    MathJax.startup.defaultReady();
+                    if (typeof forceMathRender === 'function') {
+                        forceMathRender();
+                    }
+                }
+            } 
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- Estilos CSS Modularizados -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/modals.css">
+</head>
+<body class="dark">
+
+    <!-- Barra Lateral -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="header-top">
+                <div class="logo-area">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    <span>UniverSOS</span>
+                </div>
+                <div class="sidebar-actions">
+                    <button class="btn-icon ai-btn" onclick="openAIModal()" title="Generar con IA (Gemini)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                    </button>
+                    <button class="btn-icon" onclick="openModal('importModal')" title="Importar JSON">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="context-switcher">
+                <!-- Dropdown Asignatura -->
+                <div class="custom-select-wrapper subject-level" id="dd-subject">
+                    <div class="custom-select-header" onclick="toggleDropdown('opts-subject', event)">
+                        <div class="header-main-content">
+                            <svg class="header-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                            <span class="header-text" id="subject-text">Asignatura...</span>
+                        </div>
+                        <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="custom-select-options" id="opts-subject">
+                        <div id="subject-list"></div>
+                        <div class="add-new-btn" onclick="openEditModal('subject', null, event)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Crear Asignatura
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dropdown Tema -->
+                <div class="custom-select-wrapper topic-level" id="dd-topic" style="display: none;">
+                    <div class="custom-select-header" onclick="toggleDropdown('opts-topic', event)">
+                        <div class="header-main-content">
+                            <svg class="header-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                            <span class="header-text" id="topic-text">Tema...</span>
+                        </div>
+                        <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="custom-select-options" id="opts-topic">
+                        <div id="topic-list"></div>
+                        <div class="add-new-btn" onclick="openEditModal('topic', null, event)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Crear Tema
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="exercise-list" id="exercise-list"></div>
+
+        <!-- Pie de Barra Lateral (Ajustes y Base de Datos) -->
+        <div class="sidebar-footer">
+            <button class="footer-btn" onclick="openModal('dbModal')" title="Gestionar Base de Datos y Backups">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                <span>Base de Datos</span>
+            </button>
+            <span class="footer-tag">v2.0</span>
+        </div>
+    </aside>
+
+    <!-- Área de Contenido Principal -->
+    <main class="content-area">
+        <!-- Barra Superior de Navegación y Acciones Globales -->
+        <header class="top-nav">
+            <div class="top-nav-left" id="nav-breadcrumb">
+                <span class="breadcrumb-subj">UniverSOS</span>
+                <span class="breadcrumb-sep">/</span>
+                <span class="breadcrumb-topic">Espacio de Estudio</span>
+            </div>
+            
+            <div class="top-nav-right">
+                <button class="top-nav-search-btn" onclick="openSearchModal()" title="Buscar conceptos o fórmulas (Ctrl+K)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <span>Buscar...</span>
+                    <kbd>Ctrl K</kbd>
+                </button>
+                <button class="top-nav-btn" id="examModeBtn" onclick="toggleExamMode()" title="Modo Examen / Práctica">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                    <span>Modo Examen</span>
+                </button>
+                <button class="btn-icon" onclick="openCloudModal()" title="Sincronización Cloud (Supabase)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+                </button>
+                <button class="btn-icon" onclick="toggleTheme()" id="theme-btn" title="Alternar tema claro/oscuro">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="content-scroll">
+            <div class="content-wrapper" id="exercise-content">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <h3>Espacio de Trabajo</h3>
+                    <p>Selecciona una Asignatura a la izquierda o crea una nueva para empezar a organizar tus apuntes.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Modal de Avisos Personalizado (Sustituye a alert) -->
+    <div class="modal-overlay" id="alertModal">
+        <div class="modal" style="max-width: 400px; text-align: center;">
+            <h2 id="alertTitle" style="justify-content: center;">Aviso</h2>
+            <p id="alertMsg"></p>
+            <div class="modal-actions" style="justify-content: center;">
+                <button class="btn btn-primary" onclick="closeModal('alertModal')">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación Personalizado (Sustituye a confirm) -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal" style="max-width: 400px; text-align: center;">
+            <h2 id="confirmTitle" style="justify-content: center;">Confirmar Acción</h2>
+            <p id="confirmMsg"></p>
+            <div class="modal-actions" style="justify-content: center;">
+                <button class="btn btn-secondary" onclick="closeConfirm(false)">Cancelar</button>
+                <button class="btn btn-primary" style="background: var(--c-trampa);" onclick="closeConfirm(true)">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Inteligencia Artificial (Estilo NotebookLM) -->
+    <div class="modal-overlay" id="aiModal">
+        <div class="modal ai-studio-modal">
+            <div class="ai-studio-header">
+                <h2>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                    <span>UniverSOS AI Studio</span>
+                </h2>
+                <span style="font-size: 0.78rem; color: var(--text-muted); background: var(--border-subtle); padding: 3px 8px; border-radius: 4px;">Multimodal • Análisis de Exámenes</span>
+            </div>
+
+            <div id="aiError" class="error-msg"></div>
+
+            <div class="ai-studio-body">
+                <div class="ai-studio-grid">
+                    <!-- Columna Izquierda: Fuentes de Información (Estilo NotebookLM) -->
+                    <div class="sources-panel">
+                        <div class="sources-panel-header">
+                            <span class="sources-panel-title">
+                                📁 Fuentes y Exámenes
+                            </span>
+                            <span class="sources-count-badge" id="sourcesCountBadge">0 fuentes</span>
+                        </div>
+
+                        <div class="sources-dropzone" id="sourcesDropzone" onclick="document.getElementById('aiSourceFileInput').click()">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <div>Arrastra exámenes (PDF, fotos), problemas o apuntes</div>
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">PDF, PNG, JPG, TXT, MD</span>
+                            <input type="file" id="aiSourceFileInput" style="display:none" multiple accept=".pdf,.png,.jpg,.jpeg,.txt,.md,.json,.csv" onchange="handleSourceFiles(event)">
+                        </div>
+
+                        <div class="sources-list" id="aiSourcesList">
+                            <!-- Inyectado dinámicamente -->
+                            <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 20px;">
+                                No has añadido fuentes aún. Sube parciales, exámenes o apuntes para que la IA los analice.
+                            </div>
+                        </div>
+
+                        <button class="btn btn-secondary" style="font-size: 0.78rem; padding: 6px;" onclick="promptAddTextSource()">
+                            ➕ Pegar texto/enunciado directo
+                        </button>
+                    </div>
+
+                    <!-- Columna Derecha: Configuración del Tema y Criterios -->
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div>
+                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Asignatura Destino</label>
+                            <input type="text" id="aiSubjectInput" class="text-input" placeholder="Nombre de la Asignatura..." style="margin-bottom: 0;">
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Tema a Estructurar *</label>
+                            <input type="text" id="aiTopicInput" class="text-input" placeholder="Ej: Tema 3: Diagonalización y Formas Cuadráticas" style="margin-bottom: 0;">
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">¿Qué deseas generar?</label>
+                            <div class="mode-pills-group">
+                                <button type="button" class="mode-pill-btn active" id="modeBtnBoth" onclick="setAiGenMode('both')">📚 Completo</button>
+                                <button type="button" class="mode-pill-btn" id="modeBtnExercises" onclick="setAiGenMode('exercises')">⚙️ Solo Ejercicios</button>
+                                <button type="button" class="mode-pill-btn" id="modeBtnTheory" onclick="setAiGenMode('theory')">📖 Solo Teoría</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Instrucciones / Observaciones del Profesor (Opcional)</label>
+                            <textarea id="aiPrompt" class="text-input" placeholder="Ej: Prioriza los problemas del examen de junio de 2024. El profesor suele poner preguntas trampa con multiplicidad geométrica..." style="height: 75px; resize: none; margin-bottom: 0;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barra de Configuración de API Key y Modelo -->
+                <div style="background: var(--bg-body); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <div style="flex: 2; min-width: 200px; display: flex; gap: 6px; align-items: center;">
+                        <input type="password" id="geminiApiKeyInput" class="text-input" placeholder="Gemini API Key..." style="margin-bottom: 0; font-size: 0.8rem; padding: 6px 10px;" autocomplete="off">
+                        <button class="btn btn-secondary" onclick="toggleSaveApiKey()" id="saveApiKeyBtn" style="font-size: 0.75rem; padding: 6px 10px; white-space: nowrap;">Guardar Clave</button>
+                    </div>
+                    <div style="flex: 1; min-width: 140px;">
+                        <select id="geminiModelSelect" class="text-input" style="margin-bottom: 0; font-size: 0.8rem; padding: 6px 8px; cursor: pointer;">
+                            <option value="gemini-3.8-flash">gemini-3.8-flash (Recomendado)</option>
+                            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                            <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Estado de Procesamiento -->
+                <div class="ai-loading-area" id="aiLoading">
+                    <div class="spinner"></div>
+                    <div class="ai-loading-text" id="aiLoadingStatus">Analizando fuentes y calculando ponderación de exámenes con Gemini...</div>
+                </div>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 16px; border-top: 1px solid var(--border-subtle); padding-top: 14px;">
+                <button class="btn btn-secondary" onclick="closeModal('aiModal')">Cancelar</button>
+                <button class="btn btn-magic" id="aiSubmitBtn" onclick="generateExerciseWithAI()">
+                    <span>✨ Analizar Fuentes y Generar Estudio</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Importación JSON -->
+    <div class="modal-overlay" id="importModal">
+        <div class="modal">
+            <h2>Importar JSON</h2>
+            <p>Arrastra un archivo JSON, selecciónalo o pega el código manualmente.</p>
+            
+            <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <div>Arrastra tu archivo aquí o haz clic para explorar</div>
+                <input type="file" id="file-input" style="display:none" accept=".json">
+            </div>
+
+            <textarea class="json-input" id="json-textarea" placeholder="O pega el código { ... } aquí directamente"></textarea>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('importModal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="importJsonData()">Procesar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Base de Datos -->
+    <div class="modal-overlay" id="dbModal">
+        <div class="modal">
+            <h2>Base de Datos</h2>
+            <p>Exporta todo tu conocimiento para guardarlo en iCloud/Drive o restáuralo desde un archivo previo.</p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn btn-primary" style="width: 100%;" onclick="exportDatabase()">Exportar Backup (.json)</button>
+                <input type="file" id="db-file-input" style="display:none" accept=".json" onchange="importFullDatabase(event)">
+                <button class="btn btn-secondary" style="width: 100%;" onclick="document.getElementById('db-file-input').click()">Restaurar Backup</button>
+            </div>
+            <div class="modal-actions" style="margin-top: 24px;">
+                <button class="btn btn-secondary" onclick="closeModal('dbModal')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Renombrar -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <h2 id="editModalTitle">Editar</h2>
+            <input type="text" class="text-input" id="editModalInput" placeholder="Nombre..." autocomplete="off">
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancelar</button>
+                <button class="btn btn-primary" id="editModalSave">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Añadir Ejercicio (IA, Pegar JSON o Manual) -->
+    <div class="modal-overlay" id="newExerciseModal">
+        <div class="modal" style="max-width: 600px; width: 95%;">
+            <h2>➕ Añadir Nuevo Ejercicio</h2>
+            <p style="margin-bottom: 16px;">Selecciona el método para añadir un nuevo ejercicio tipo al tema actual.</p>
+
+            <div class="mode-pills-group" style="margin-bottom: 16px;">
+                <button type="button" class="mode-pill-btn active" id="tabAddAi" onclick="setAddExerciseTab('ai')">✨ Con IA</button>
+                <button type="button" class="mode-pill-btn" id="tabAddJson" onclick="setAddExerciseTab('json')">📋 Pegar JSON</button>
+                <button type="button" class="mode-pill-btn" id="tabAddManual" onclick="setAddExerciseTab('manual')">✍️ Rápido</button>
+            </div>
+
+            <!-- Panel 1: Generar con IA -->
+            <div id="addExercisePanelAi" style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 8px;">✨</div>
+                    <div style="font-weight: 700; color: var(--text-heading); margin-bottom: 4px;">Generar Nuevos Ejercicios con Gemini</div>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Abre el Estudio IA con tus fuentes y exámenes para generar ejercicios adicionales optimizados con análisis de frecuencia.</p>
+                    <button class="btn btn-magic" style="width: 100%; justify-content: center;" onclick="openAIFromNewExercise()">
+                        <span>Abrir Estudio IA con Fuentes</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel 2: Pegar JSON -->
+            <div id="addExercisePanelJson" style="display: none; flex-direction: column; gap: 12px;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading);">Pega el objeto o array JSON del ejercicio:</label>
+                <textarea id="addExerciseJsonInput" class="text-input" placeholder='{\n  "title": "Tipo: Integración de Densidades Conjuntas",\n  "probabilidad": 85,\n  "algoritmo": [...],\n  "ejemploCompleto": "..."\n}' style="height: 180px; font-family: var(--font-mono); font-size: 0.8rem; resize: vertical;"></textarea>
+                <div class="modal-actions" style="margin-top: 4px;">
+                    <button class="btn btn-secondary" onclick="closeModal('newExerciseModal')">Cancelar</button>
+                    <button class="btn btn-primary" onclick="submitJsonExercise()">Insertar Ejercicio</button>
+                </div>
+            </div>
+
+            <!-- Panel 3: Rápido / Manual -->
+            <div id="addExercisePanelManual" style="display: none; flex-direction: column; gap: 12px;">
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Título del Ejercicio Tipo *</label>
+                    <input type="text" id="addExerciseTitleInput" class="text-input" placeholder="Ej: Tipo 4: Cálculo de Probabilidades en Regiones Circulares" autocomplete="off">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Probabilidad estimada en Examen (%)</label>
+                    <input type="number" id="addExerciseProbInput" class="text-input" placeholder="75" min="1" max="100" value="70">
+                </div>
+                <div class="modal-actions" style="margin-top: 4px;">
+                    <button class="btn btn-secondary" onclick="closeModal('newExerciseModal')">Cancelar</button>
+                    <button class="btn btn-primary" onclick="submitManualExercise()">Crear Ejercicio</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Buscador Global (Ctrl+K) -->
+    <div class="modal-overlay" id="searchModal">
+        <div class="modal search-modal-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h2 style="margin: 0; font-size: 1.2rem;">🔍 Buscador Global</h2>
+                <span style="font-size: 0.75rem; color: var(--text-muted); background: var(--border-subtle); padding: 2px 6px; border-radius: 4px;">Esc para cerrar</span>
+            </div>
+            <div class="search-input-wrapper">
+                <svg class="search-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="globalSearchInput" class="search-input-field" placeholder="Buscar fórmulas, teoremas, pasos, trampas..." autocomplete="off">
+            </div>
+            <div id="searchResults"></div>
+        </div>
+    </div>
+
+    <!-- Modal Sincronización Cloud (Supabase) -->
+    <div class="modal-overlay" id="cloudModal">
+        <div class="modal" style="max-width: 520px;">
+            <h2>☁️ Sincronización en la Nube</h2>
+            <p>Conecta UniverSOS con tu proyecto gratuito de Supabase para tener tus apuntes sincronizados en tu portátil, tablet y móvil.</p>
+
+            <div id="cloudStatusDiv" style="margin-bottom: 14px; font-size: 0.85rem; padding: 10px 12px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px;"></div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Project URL de Supabase</label>
+                    <input type="text" id="cloudUrlInput" class="text-input" placeholder="https://xyzcompany.supabase.co" autocomplete="off">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Anon / Public Key</label>
+                    <input type="password" id="cloudKeyInput" class="text-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Código de Sincronización (ID de Estudiante)</label>
+                    <input type="text" id="cloudSyncIdInput" class="text-input" placeholder="mi_codigo_estudiante_123" autocomplete="off">
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Usa el mismo código en todos tus dispositivos para compartir los mismos apuntes.</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                    <input type="checkbox" id="cloudAutoSyncCheck" style="width: 16px; height: 16px; cursor: pointer;">
+                    <label for="cloudAutoSyncCheck" style="font-size: 0.85rem; cursor: pointer; color: var(--text-heading);">Auto-sincronizar al guardar cambios</label>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="pushToCloud()">⬆️ Subir (Push)</button>
+                <button class="btn btn-secondary" style="flex: 1;" onclick="pullFromCloud()">⬇️ Descargar (Pull)</button>
+            </div>
+
+            <details style="font-size: 0.8rem; color: var(--text-muted); background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; margin-bottom: 16px;">
+                <summary style="cursor: pointer; font-weight: 700; color: var(--primary);">📋 Ver SQL para crear la tabla en Supabase (1 clic)</summary>
+                <pre style="margin-top: 8px; font-family: var(--font-mono); font-size: 0.75rem; overflow-x: auto; background: var(--step-content-bg); padding: 8px; border-radius: 4px;">create table universos_sync (
+  id text primary key,
+  data jsonb,
+  updated_at timestamp with time zone default timezone('utc'::text, now())
+);
+alter table universos_sync enable row level security;
+create policy "Acceso público universos" on universos_sync for all using (true);</pre>
+            </details>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('cloudModal')">Cerrar</button>
+                <button class="btn btn-primary" onclick="saveCloudSettings()">Guardar Ajustes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts de la Aplicación en Orden de Dependencia -->
+    <script src="js/sanitizer.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/modals.js"></script>
+    <script src="js/math-render.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/edit.js"></script>
+    <script src="js/import-export.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/cloud-sync.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

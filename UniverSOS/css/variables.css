@@ -1,0 +1,61 @@
+:root {
+    /* Modo Claro */
+    --bg-body: #F9FAFB;
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #F3F4F6;
+    --border-subtle: #E5E7EB;
+    
+    --text-heading: #111827;
+    --text-body: #374151;
+    --text-muted: #6B7280;
+    
+    --primary: #3b82f6;
+    --primary-bg: #EFF6FF;
+    --c-var: #8b5cf6;    
+    --c-var-bg: #f5f3ff;
+    --c-truco: #10b981;  
+    --c-truco-bg: #ecfdf5;
+    --c-error: #f59e0b;  
+    --c-error-bg: #fffbeb;
+    --c-trampa: #ef4444; 
+    --c-trampa-bg: #fef2f2;
+    --c-ejemplo: #0f172a;
+    --c-ejemplo-txt: #f8fafc;
+    
+    --step-bg: #FFFFFF;
+    --step-content-bg: #F9FAFB;
+    
+    --shadow-float: 0 10px 40px -10px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05);
+    --font-main: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+}
+
+body.dark {
+    /* Modo Oscuro */
+    --bg-body: #050505;
+    --bg-card: #111111;
+    --bg-sidebar: #0A0A0A;
+    --border-subtle: #27272A;
+    
+    --text-heading: #FAFAFA;
+    --text-body: #A1A1AA;
+    --text-muted: #71717A;
+    
+    --primary: #3b82f6;
+    --primary-bg: rgba(59, 130, 246, 0.1);
+    --c-var: #a855f7;    
+    --c-var-bg: rgba(168, 85, 247, 0.05);
+    --c-truco: #10b981;  
+    --c-truco-bg: rgba(16, 185, 129, 0.05);
+    --c-error: #f59e0b;  
+    --c-error-bg: rgba(245, 158, 11, 0.05);
+    --c-trampa: #ef4444; 
+    --c-trampa-bg: rgba(239, 68, 68, 0.05);
+    --c-ejemplo: #0f172a;
+    --c-ejemplo-txt: #e2e8f0;
+    
+    --step-bg: #111111;
+    --step-content-bg: #0A0A0A;
+    
+    --shadow-float: 0 20px 40px -10px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.1);
+}
