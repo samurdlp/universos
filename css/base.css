@@ -50,10 +50,18 @@ body {
 @media (max-width: 768px) {
     body {
         flex-direction: column;
+        height: 100dvh;
+    }
+    .content-area {
+        height: auto;
+        flex: 1;
+        min-height: 0;
     }
     .sidebar {
         width: 100%;
         height: auto;
+        max-height: 40vh;
+        overflow-y: auto;
         border-right: none;
         border-bottom: 1px solid var(--border-subtle);
     }
