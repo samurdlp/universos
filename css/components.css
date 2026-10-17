@@ -470,3 +470,21 @@ mark.search-target-highlight.fade-out {
     color: var(--primary);
     box-shadow: inset 0 0 0 1px var(--primary);
 }
+
+/* Optimización táctil para móviles: evitar que se requiera hover/doble toque para pulsar */
+@media (hover: none) and (pointer: coarse), (max-width: 768px) {
+    .card-actions, .option-actions {
+        opacity: 0.85 !important;
+    }
+    
+    .act-btn {
+        padding: 8px !important;
+        min-width: 32px;
+        min-height: 32px;
+    }
+    
+    .exercise-card, .custom-option, .step-header, .accordion-header, .checklist-header, .filter-pill {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+}
