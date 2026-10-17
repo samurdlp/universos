@@ -47,29 +47,199 @@ body {
     z-index: 20; 
 }
 
+/* Botón de menú móvil (oculto en desktop) */
+.mobile-menu-btn {
+    display: none;
+}
+
+.mobile-close-sidebar-btn {
+    display: none;
+}
+
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 95;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.sidebar-backdrop.active {
+    display: block;
+    opacity: 1;
+}
+
 @media (max-width: 768px) {
     body {
-        flex-direction: column;
         height: 100dvh;
+        overflow: hidden;
     }
-    .content-area {
-        height: auto;
-        flex: 1;
-        min-height: 0;
+    
+    body.sidebar-open-lock {
+        overflow: hidden;
     }
+
+    /* En móvil, la barra lateral se convierte en un cajón deslizante off-canvas */
     .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 85%;
+        max-width: 320px;
+        height: 100dvh;
+        max-height: 100dvh;
+        background: var(--bg-sidebar);
+        border-right: 1px solid var(--border-subtle);
+        box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+        z-index: 100;
+        transform: translateX(-100%);
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    .mobile-menu-btn {
+        display: inline-flex;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
+
+    .mobile-close-sidebar-btn {
+        display: inline-flex;
+    }
+
+    /* El contenido principal ocupa siempre el 100% de la pantalla */
+    .content-area {
         width: 100%;
-        height: auto;
-        max-height: 40vh;
-        overflow-y: auto;
-        border-right: none;
-        border-bottom: 1px solid var(--border-subtle);
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
     }
+
     .top-nav {
-        padding: 0 16px !important;
+        padding: 0 12px !important;
+        height: 52px;
+        gap: 8px;
     }
+
+    .top-nav-left {
+        min-width: 0;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .breadcrumb-text-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.8rem;
+    }
+
+    .breadcrumb-subj, .breadcrumb-topic {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .top-nav-right {
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    /* Ocultar texto largo en botones de la barra superior en móvil */
+    .top-nav-search-btn span, 
+    .top-nav-search-btn kbd {
+        display: none;
+    }
+    .top-nav-search-btn {
+        padding: 6px 8px;
+    }
+
+    .top-nav-btn span {
+        display: none;
+    }
+    .top-nav-btn {
+        padding: 6px 8px;
+    }
+
     .content-scroll {
-        padding: 20px !important;
+        padding: 16px 14px 40px 14px !important;
+    }
+
+    .content-wrapper {
+        gap: 20px;
+        padding-bottom: 40px;
+    }
+
+    .main-title {
+        font-size: 1.35rem !important;
+        line-height: 1.25;
+    }
+
+    .exercise-header-top {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .header-action-pills {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .mastery-selector {
+        flex-wrap: wrap;
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .step-header {
+        padding: 12px 14px !important;
+        gap: 10px !important;
+    }
+
+    .step-content {
+        padding: 0 14px 0 14px !important;
+    }
+
+    .step-block.open .step-content {
+        padding: 14px 14px 14px 14px !important;
+    }
+
+    /* Modal responsive en móvil */
+    .modal {
+        width: 95% !important;
+        max-width: 95% !important;
+        padding: 18px 16px !important;
+        margin: 10px auto;
+        max-height: 92vh;
+        overflow-y: auto;
+    }
+
+    .ai-studio-modal {
+        padding: 16px 12px !important;
+        max-height: 94vh !important;
+    }
+
+    .modal-actions {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .modal-actions .btn {
+        width: 100%;
+        justify-content: center;
     }
 }
 
@@ -288,6 +458,16 @@ body {
 
 mjx-container {
     color: currentColor !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 2px !important;
+}
+
+mjx-container[display="true"] {
+    display: block !important;
+    margin: 1em 0 !important;
+    overflow-x: auto !important;
 }
 
 .main-title {

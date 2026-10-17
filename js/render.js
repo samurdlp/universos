@@ -77,9 +77,17 @@ function renderDropdowns() {
 function updateBreadcrumbs() {
     const navLeft = document.getElementById('nav-breadcrumb');
     if (!navLeft) return;
+
+    let textGroup = navLeft.querySelector('.breadcrumb-text-group');
+    if (!textGroup) {
+        textGroup = document.createElement('div');
+        textGroup.className = 'breadcrumb-text-group';
+        navLeft.appendChild(textGroup);
+    }
+
     const activeSubj = appDB.subjects.find(s => s.id === activeSubjectId);
     if (!activeSubj) {
-        navLeft.innerHTML = `
+        textGroup.innerHTML = `
             <span class="breadcrumb-subj">UniverSOS</span>
             <span class="breadcrumb-sep">/</span>
             <span class="breadcrumb-topic">Espacio de Estudio</span>
@@ -91,8 +99,8 @@ function updateBreadcrumbs() {
     if (activeTop) {
         html += `<span class="breadcrumb-sep">/</span><span class="breadcrumb-topic">${sanitizeHTML(activeTop.name)}</span>`;
     }
-    navLeft.innerHTML = html;
-    forceMathRender([navLeft]);
+    textGroup.innerHTML = html;
+    forceMathRender([textGroup]);
 }
 
 function selectSubject(id) {
@@ -242,6 +250,9 @@ function renderTopicExercises() {
 }
 
 function selectTheory() {
+    if (window.innerWidth <= 768 && typeof closeMobileSidebar === 'function') {
+        closeMobileSidebar();
+    }
     document.querySelectorAll('.exercise-card').forEach(c => c.classList.remove('active'));
     const card = document.getElementById('card-theory');
     if (card) card.classList.add('active');
@@ -412,6 +423,9 @@ function revealExamSolution(index) {
 }
 
 function selectExercise(index) {
+    if (window.innerWidth <= 768 && typeof closeMobileSidebar === 'function') {
+        closeMobileSidebar();
+    }
     currentExerciseIndex = index;
     document.querySelectorAll('.exercise-card').forEach(c => c.classList.remove('active'));
     const card = document.getElementById(`card-ex-${index}`);
