@@ -1,3 +1,19 @@
+function isMobileOrLandscapeDrawer() {
+    return window.matchMedia('(max-width: 768px), (max-height: 500px) and (orientation: landscape)').matches;
+}
+
+function toggleSidebar() {
+    if (isMobileOrLandscapeDrawer()) {
+        toggleMobileSidebar();
+    } else {
+        const sidebar = document.getElementById('appSidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('collapsed');
+            localStorage.setItem('universos_sidebar_collapsed', sidebar.classList.contains('collapsed') ? 'true' : 'false');
+        }
+    }
+}
+
 function toggleMobileSidebar() {
     const sidebar = document.getElementById('appSidebar');
     const backdrop = document.getElementById('sidebarBackdrop');
@@ -21,8 +37,18 @@ function closeMobileSidebar() {
     document.body.classList.remove('sidebar-open-lock');
 }
 
+window.addEventListener('resize', () => {
+    if (!isMobileOrLandscapeDrawer()) {
+        closeMobileSidebar();
+    }
+});
+
 function initApp() {
     loadDB();
+    if (!isMobileOrLandscapeDrawer() && localStorage.getItem('universos_sidebar_collapsed') === 'true') {
+        const sidebar = document.getElementById('appSidebar');
+        if (sidebar) sidebar.classList.add('collapsed');
+    }
     initModalListeners();
     initEditListeners();
     initImportDropZone();

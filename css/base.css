@@ -54,16 +54,26 @@ body {
 
 .sidebar { 
     width: 340px;
+    flex-shrink: 0;
     background-color: var(--bg-sidebar);
     border-right: 1px solid var(--border-subtle); 
     display: flex;
     flex-direction: column;
     z-index: 20; 
+    transition: margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Botón de menú móvil (oculto en desktop) */
-.mobile-menu-btn {
-    display: none;
+/* En ordenador, permite replegar la barra lateral completamente */
+.sidebar.collapsed {
+    margin-left: -340px;
+}
+
+/* Botón universal para alternar la barra lateral (visible en PC y móvil) */
+.sidebar-toggle-btn {
+    display: inline-flex;
+    margin-right: 8px;
+    flex-shrink: 0;
+    cursor: pointer;
 }
 
 .mobile-close-sidebar-btn {
@@ -74,19 +84,21 @@ body {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
     z-index: 95;
     opacity: 0;
     transition: opacity 0.25s ease;
+    pointer-events: none;
 }
 
 .sidebar-backdrop.active {
     display: block;
     opacity: 1;
+    pointer-events: auto;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (max-height: 500px) and (orientation: landscape) {
     body {
         height: 100dvh;
         overflow: hidden;
@@ -96,34 +108,30 @@ body {
         overflow: hidden;
     }
 
-    /* En móvil, la barra lateral se convierte en un cajón deslizante off-canvas */
+    /* En móvil y pantalla horizontal, la barra lateral es un cajón deslizante off-canvas */
     .sidebar {
         position: fixed;
         top: 0;
         bottom: 0;
         left: 0;
-        width: 85%;
+        width: 82%;
         max-width: 320px;
         height: 100dvh;
         max-height: 100dvh;
         background: var(--bg-sidebar);
         border-right: 1px solid var(--border-subtle);
-        box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+        box-shadow: none !important;
         z-index: 100;
         transform: translateX(-100%);
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        display: flex;
-        flex-direction: column;
+        margin-left: 0 !important;
+        visibility: hidden;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
     }
 
     .sidebar.mobile-open {
         transform: translateX(0);
-    }
-
-    .mobile-menu-btn {
-        display: inline-flex;
-        margin-right: 8px;
-        flex-shrink: 0;
+        visibility: visible;
+        box-shadow: 10px 0 30px rgba(0,0,0,0.4) !important;
     }
 
     .mobile-close-sidebar-btn {
@@ -203,6 +211,41 @@ body {
         overflow-x: hidden;
     }
 
+    /* Texto con alineación de relleno (justificado) en móvil y modo lectura */
+    .content-wrapper p,
+    .content-wrapper li,
+    .theory-content,
+    .theory-content p,
+    .theory-content li,
+    .step-subtitle,
+    .step-content-inner,
+    .step-content-inner p,
+    .example-box,
+    .example-box p,
+    .example-box div,
+    .action-box,
+    .action-box p,
+    .checklist-body-inner,
+    .checklist-body-inner p {
+        text-align: justify !important;
+        text-justify: inter-word;
+        hyphens: auto;
+        -webkit-hyphens: auto;
+    }
+
+    /* Títulos, encabezados, código y fórmulas matemáticas mantienen alineación natural */
+    .main-title,
+    .section-title,
+    .step-title-text,
+    .accordion-header,
+    .checklist-title,
+    .checklist-title-span,
+    code, pre, kbd {
+        text-align: left !important;
+        hyphens: none !important;
+        -webkit-hyphens: none !important;
+    }
+
     /* Evitar que párrafos o títulos largos provoquen desplazamiento horizontal */
     .content-wrapper p,
     .content-wrapper li,
@@ -212,6 +255,36 @@ body {
         overflow-wrap: break-word;
         word-wrap: break-word;
         word-break: break-word;
+    }
+
+    /* Ancho y padding adaptados en móvil para evitar desbordes */
+    .example-box {
+        padding: 16px 14px !important;
+        border-radius: 8px !important;
+        font-size: 0.88rem !important;
+        overflow-x: auto !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .action-box {
+        padding: 12px 14px !important;
+        border-radius: 6px !important;
+        font-size: 0.85rem !important;
+        overflow-x: auto !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .checklist-box {
+        padding: 16px 14px !important;
+        margin-top: 24px !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .custom-select-options {
+        max-height: 220px !important;
     }
 
     .main-title {
@@ -498,12 +571,44 @@ mjx-container {
     overflow-x: auto !important;
     overflow-y: hidden !important;
     padding-bottom: 2px !important;
+    vertical-align: middle;
+    -webkit-overflow-scrolling: touch;
 }
 
 mjx-container[display="true"] {
     display: block !important;
     margin: 1em 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
     overflow-x: auto !important;
+    overflow-y: hidden !important;
+    text-align: center;
+    -webkit-overflow-scrolling: touch;
+}
+
+mjx-container::-webkit-scrollbar {
+    height: 4px;
+}
+
+mjx-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+mjx-container::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 999px;
+}
+
+/* Evitar que elementos flex o grid desborden el ancho en pantallas estrechas */
+.content-area,
+.step-content,
+.step-content-inner,
+.accordion-content,
+.accordion-content-inner,
+.checklist-body,
+.checklist-body-inner {
+    min-width: 0 !important;
+    max-width: 100% !important;
 }
 
 .main-title {

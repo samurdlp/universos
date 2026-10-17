@@ -250,7 +250,7 @@ function renderTopicExercises() {
 }
 
 function selectTheory() {
-    if (window.innerWidth <= 768 && typeof closeMobileSidebar === 'function') {
+    if (typeof closeMobileSidebar === 'function' && (typeof isMobileOrLandscapeDrawer === 'function' ? isMobileOrLandscapeDrawer() : window.innerWidth <= 768)) {
         closeMobileSidebar();
     }
     document.querySelectorAll('.exercise-card').forEach(c => c.classList.remove('active'));
@@ -423,7 +423,7 @@ function revealExamSolution(index) {
 }
 
 function selectExercise(index) {
-    if (window.innerWidth <= 768 && typeof closeMobileSidebar === 'function') {
+    if (typeof closeMobileSidebar === 'function' && (typeof isMobileOrLandscapeDrawer === 'function' ? isMobileOrLandscapeDrawer() : window.innerWidth <= 768)) {
         closeMobileSidebar();
     }
     currentExerciseIndex = index;
