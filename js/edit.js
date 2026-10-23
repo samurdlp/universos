@@ -10,7 +10,21 @@ function toggleTheme() {
 }
 
 function toggleClass(element) { 
-    element.parentElement.classList.toggle('open'); 
+    const parent = element.parentElement;
+    if (!parent) return;
+    parent.classList.toggle('open');
+    if (parent.classList.contains('open') && typeof forceMathRender === 'function') {
+        forceMathRender([parent]);
+    }
+}
+
+function toggleChecklistExpand(headerEl) {
+    const wrapper = headerEl.closest('.checklist-item-wrapper');
+    if (!wrapper) return;
+    wrapper.classList.toggle('expanded');
+    if (wrapper.classList.contains('expanded') && typeof forceMathRender === 'function') {
+        forceMathRender([wrapper]);
+    }
 }
 
 function toggleDropdown(id, e) {
@@ -110,22 +124,6 @@ function initEditListeners() {
                         if (topic.data.ejercicios[editTargetId]) {
                             topic.data.ejercicios[editTargetId].title = val;
                         }
-                    } else {
-                        // Crear nuevo ejercicio
-                        const newEx = {
-                            title: val,
-                            probabilidad: 50,
-                            identificacion: ["Pautas de resolución para " + val],
-                            algoritmo: [
-                                {
-                                    title: "Paso 1: Planteamiento",
-                                    subtitle: "Definir variables y condiciones iniciales",
-                                    example: "Indicar el punto de partida del problema."
-                                }
-                            ],
-                            ejemploCompleto: "Desarrollo del ejercicio con fórmulas LaTeX."
-                        };
-                        topic.data.ejercicios.push(newEx);
                     }
                 }
             }
@@ -143,9 +141,13 @@ function initEditListeners() {
         });
     }
 
-    // Cerrar desplegables al hacer clic fuera
-    document.addEventListener('click', () => {
-        document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
+    // Cerrar desplegables SOLO si el clic empezó y terminó fuera del desplegable
+    document.addEventListener('click', (e) => {
+        const downInsideDropdown = lastPointerDownTarget && lastPointerDownTarget.closest && lastPointerDownTarget.closest('.custom-select-wrapper');
+        const upInsideDropdown = e.target && e.target.closest && e.target.closest('.custom-select-wrapper');
+        if (!downInsideDropdown && !upInsideDropdown) {
+            document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
+        }
     });
 }
 
@@ -163,21 +165,19 @@ function deleteItem(type, id, e) {
     } else if (type === 'theory') {
         confirmPrompt = "¿Eliminar la sección de Teoría de este tema?";
     } else if (type === 'exercise') {
-        confirmPrompt = "¿Eliminar este ejercicio completo y todos sus pasos/variaciones?";
+        confirmPrompt = "¿Eliminar este ejercicio completo y todos sus pasos y variaciones?";
     }
 
     customConfirm(confirmPrompt, (confirmed) => {
         if (!confirmed) return;
         
         if (type === 'subject') {
-            // Eliminación en cascada de la asignatura y todas sus subramas
             appDB.subjects = appDB.subjects.filter(s => s.id !== id);
             if (activeSubjectId === id) { 
                 activeSubjectId = null; 
                 activeTopicId = null; 
             }
         } else if (type === 'topic') {
-            // Eliminación en cascada del tema y todas sus subramas
             const s = appDB.subjects.find(s => s.topics.some(t => t.id === id)) || appDB.subjects.find(s => s.id === activeSubjectId);
             if (s) {
                 s.topics = s.topics.filter(t => t.id !== id);
@@ -186,14 +186,12 @@ function deleteItem(type, id, e) {
                 }
             }
         } else if (type === 'theory') {
-            // Eliminación de la rama de teoría
             const s = appDB.subjects.find(s => s.id === activeSubjectId);
             const topic = s ? s.topics.find(t => t.id === activeTopicId) : null;
             if (topic && topic.data) {
                 delete topic.data.teoria;
             }
         } else if (type === 'exercise') {
-            // Eliminación del ejercicio y todos sus pasos/variaciones/trucos
             const s = appDB.subjects.find(s => s.id === activeSubjectId);
             const topic = s ? s.topics.find(t => t.id === activeTopicId) : null;
             if (topic && topic.data && topic.data.ejercicios) {
@@ -207,119 +205,9 @@ function deleteItem(type, id, e) {
         if (activeTopicId) {
             renderTopicExercises();
         } else {
-            // Limpieza integral del DOM de subramas
             const exList = document.getElementById('exercise-list');
             if (exList) exList.innerHTML = '';
             setEmptyState(activeSubjectId ? 'Selecciona o crea un Tema en el panel superior.' : 'Selecciona o crea una Asignatura.');
         }
     });
-}
-
-function openNewExerciseModal(e) {
-    if (e) e.stopPropagation();
-    if (!activeSubjectId || !activeTopicId) {
-        customAlert("Por favor, selecciona una Asignatura y un Tema antes de añadir un ejercicio.");
-        return;
-    }
-    setAddExerciseTab('ai');
-    openModal('newExerciseModal');
-}
-
-function setAddExerciseTab(tab) {
-    const tabs = ['ai', 'json', 'manual'];
-    tabs.forEach(t => {
-        const btn = document.getElementById('tabAdd' + t.charAt(0).toUpperCase() + t.slice(1));
-        const panel = document.getElementById('addExercisePanel' + t.charAt(0).toUpperCase() + t.slice(1));
-        if (btn) btn.classList.toggle('active', t === tab);
-        if (panel) panel.style.display = (t === tab) ? 'flex' : 'none';
-    });
-}
-
-function openAIFromNewExercise() {
-    closeModal('newExerciseModal');
-    // Forzar modo Solo Ejercicios en el estudio IA
-    if (typeof setAiGenMode === 'function') {
-        setAiGenMode('exercises');
-    }
-    openAIModal();
-}
-
-function submitJsonExercise() {
-    const textarea = document.getElementById('addExerciseJsonInput');
-    if (!textarea || !textarea.value.trim()) {
-        customAlert("Pega el JSON del ejercicio a insertar.");
-        return;
-    }
-
-    const s = appDB.subjects.find(s => s.id === activeSubjectId);
-    const topic = s ? s.topics.find(t => t.id === activeTopicId) : null;
-    if (!topic) return;
-
-    try {
-        let fixed = fixJsonLatex(textarea.value.trim());
-        let parsed = JSON.parse(fixed);
-
-        if (!topic.data) topic.data = { ejercicios: [] };
-        if (!topic.data.ejercicios) topic.data.ejercicios = [];
-
-        // Si viene un array de ejercicios o un solo objeto de ejercicio
-        if (Array.isArray(parsed)) {
-            parsed.forEach(ex => topic.data.ejercicios.push(ex));
-        } else if (parsed.ejercicios && Array.isArray(parsed.ejercicios)) {
-            parsed.ejercicios.forEach(ex => topic.data.ejercicios.push(ex));
-        } else if (parsed.title) {
-            topic.data.ejercicios.push(parsed);
-        } else {
-            throw new Error("El JSON debe tener un campo 'title' o ser un array de ejercicios.");
-        }
-
-        saveDB();
-        renderTopicExercises();
-        closeModal('newExerciseModal');
-        textarea.value = '';
-        selectExercise(topic.data.ejercicios.length - 1);
-        customAlert("¡Ejercicio(s) añadido(s) con éxito al tema!");
-    } catch (err) {
-        customAlert("Error al procesar el JSON del ejercicio: " + err.message);
-    }
-}
-
-function submitManualExercise() {
-    const titleInput = document.getElementById('addExerciseTitleInput');
-    const probInput = document.getElementById('addExerciseProbInput');
-    const title = titleInput ? titleInput.value.trim() : '';
-    const prob = probInput ? parseInt(probInput.value) || 70 : 70;
-
-    if (!title) {
-        customAlert("Escribe un título para el nuevo ejercicio tipo.");
-        return;
-    }
-
-    const s = appDB.subjects.find(s => s.id === activeSubjectId);
-    const topic = s ? s.topics.find(t => t.id === activeTopicId) : null;
-    if (!topic) return;
-
-    if (!topic.data) topic.data = { ejercicios: [] };
-    if (!topic.data.ejercicios) topic.data.ejercicios = [];
-
-    const newEx = {
-        title: title,
-        probabilidad: prob,
-        identificacion: ["Pistas de resolución para " + title],
-        algoritmo: [
-            {
-                title: "Paso 1: Planteamiento",
-                subtitle: "Definir variables y condiciones iniciales",
-                example: "Indicar el punto de partida del problema."
-            }
-        ],
-        ejemploCompleto: "Desarrollo del ejercicio con fórmulas LaTeX."
-    };
-
-    topic.data.ejercicios.push(newEx);
-    saveDB();
-    renderTopicExercises();
-    closeModal('newExerciseModal');
-    if (titleInput) titleInput.value = '';
-    selectExercise(topic.data.ejercicios.length - 1);
 }

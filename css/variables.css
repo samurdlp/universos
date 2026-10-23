@@ -1,61 +1,66 @@
 :root {
     /* Modo Claro */
-    --bg-body: #F9FAFB;
+    --bg-body: #F8FAFC;
     --bg-card: #FFFFFF;
-    --bg-sidebar: #F3F4F6;
-    --border-subtle: #E5E7EB;
+    --bg-sidebar: #F1F5F9;
+    --border-subtle: #E2E8F0;
     
-    --text-heading: #111827;
-    --text-body: #374151;
-    --text-muted: #6B7280;
+    --text-heading: #0F172A;
+    --text-body: #334155;
+    --text-muted: #64748B;
     
     --primary: #3b82f6;
-    --primary-bg: #EFF6FF;
+    --primary-bg: rgba(59, 130, 246, 0.1);
     --c-var: #8b5cf6;    
-    --c-var-bg: #f5f3ff;
+    --c-var-bg: rgba(139, 92, 246, 0.08);
     --c-truco: #10b981;  
-    --c-truco-bg: #ecfdf5;
+    --c-truco-bg: rgba(16, 185, 129, 0.08);
     --c-error: #f59e0b;  
-    --c-error-bg: #fffbeb;
+    --c-error-bg: rgba(245, 158, 11, 0.08);
     --c-trampa: #ef4444; 
-    --c-trampa-bg: #fef2f2;
+    --c-trampa-bg: rgba(239, 68, 68, 0.08);
     --c-ejemplo: #0f172a;
     --c-ejemplo-txt: #f8fafc;
     
     --step-bg: #FFFFFF;
-    --step-content-bg: #F9FAFB;
+    --step-content-bg: #F8FAFC;
     
-    --shadow-float: 0 10px 40px -10px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05);
-    --font-main: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --shadow-float: 0 12px 36px -8px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.06);
+    --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
+
+    /* Curvas de animación de alta artesanía (Emil Kowalski) */
+    --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 body.dark {
     /* Modo Oscuro */
-    --bg-body: #050505;
-    --bg-card: #111111;
-    --bg-sidebar: #0A0A0A;
-    --border-subtle: #27272A;
+    --bg-body: #070709;
+    --bg-card: #111115;
+    --bg-sidebar: #0B0B0E;
+    --border-subtle: #232329;
     
-    --text-heading: #FAFAFA;
+    --text-heading: #F8FAFC;
     --text-body: #A1A1AA;
     --text-muted: #71717A;
     
     --primary: #3b82f6;
-    --primary-bg: rgba(59, 130, 246, 0.1);
+    --primary-bg: rgba(59, 130, 246, 0.12);
     --c-var: #a855f7;    
-    --c-var-bg: rgba(168, 85, 247, 0.05);
+    --c-var-bg: rgba(168, 85, 247, 0.07);
     --c-truco: #10b981;  
-    --c-truco-bg: rgba(16, 185, 129, 0.05);
+    --c-truco-bg: rgba(16, 185, 129, 0.07);
     --c-error: #f59e0b;  
-    --c-error-bg: rgba(245, 158, 11, 0.05);
+    --c-error-bg: rgba(245, 158, 11, 0.07);
     --c-trampa: #ef4444; 
-    --c-trampa-bg: rgba(239, 68, 68, 0.05);
-    --c-ejemplo: #0f172a;
+    --c-trampa-bg: rgba(239, 68, 68, 0.07);
+    --c-ejemplo: #0d1322;
     --c-ejemplo-txt: #e2e8f0;
     
-    --step-bg: #111111;
-    --step-content-bg: #0A0A0A;
+    --step-bg: #111115;
+    --step-content-bg: #0B0B0E;
     
-    --shadow-float: 0 20px 40px -10px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.1);
+    --shadow-float: 0 20px 45px -10px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,255,255,0.08);
 }

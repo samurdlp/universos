@@ -41,7 +41,7 @@
 <body class="dark">
 
     <!-- Overlay para oscurecer fondo cuando el menú lateral está abierto en móvil -->
-    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileSidebar()"></div>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <!-- Barra Lateral -->
     <aside class="sidebar" id="appSidebar">
@@ -55,11 +55,11 @@
                     <button class="btn-icon ai-btn" onclick="openAIModal()" title="Generar con IA (Gemini)">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
                     </button>
-                    <button class="btn-icon" onclick="openModal('importModal')" title="Importar JSON">
+                    <button class="btn-icon" onclick="openModal('importModal')" title="Importar Contenido JSON (Temas, Teoría o Ejercicios)">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     </button>
-                    <button class="btn-icon mobile-close-sidebar-btn" onclick="closeMobileSidebar()" title="Cerrar menú">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <button class="btn-icon sidebar-panel-collapse-btn" onclick="toggleSidebar()" title="Plegar panel lateral">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><path d="m14 9-3 3 3 3"></path></svg>
                     </button>
                 </div>
             </div>
@@ -109,7 +109,7 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
                 <span>Base de Datos</span>
             </button>
-            <span class="footer-tag">v2.0</span>
+            <span class="footer-tag">v2.5</span>
         </div>
     </aside>
 
@@ -118,8 +118,8 @@
         <!-- Barra Superior de Navegación y Acciones Globales -->
         <header class="top-nav">
             <div class="top-nav-left" id="nav-breadcrumb">
-                <button class="btn-icon sidebar-toggle-btn" onclick="toggleSidebar()" title="Mostrar u ocultar menú lateral">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                <button class="btn-icon sidebar-toggle-btn" id="topSidebarToggleBtn" onclick="toggleSidebar()" title="Desplegar o plegar panel lateral">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
                 </button>
                 <div class="breadcrumb-text-group">
                     <span class="breadcrumb-subj">UniverSOS</span>
@@ -134,7 +134,11 @@
                     <span>Buscar...</span>
                     <kbd>Ctrl K</kbd>
                 </button>
-                <button class="top-nav-btn" id="examModeBtn" onclick="toggleExamMode()" title="Modo Examen / Práctica">
+                <button class="top-nav-btn" id="cheatsheetBtn" onclick="openCheatsheetModal()" title="Generador de Chuleta Compacta del Tema">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line></svg>
+                    <span>Chuleta</span>
+                </button>
+                <button class="top-nav-btn" id="examModeBtn" onclick="toggleExamMode()" title="Simulador de Examen y Práctica Activa">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
                     <span>Modo Examen</span>
                 </button>
@@ -157,50 +161,28 @@
             </div>
         </div>
     </main>
-    
-    <!-- Modal de Avisos Personalizado (Sustituye a alert) -->
-    <div class="modal-overlay" id="alertModal">
-        <div class="modal" style="max-width: 400px; text-align: center;">
-            <h2 id="alertTitle" style="justify-content: center;">Aviso</h2>
-            <p id="alertMsg"></p>
-            <div class="modal-actions" style="justify-content: center;">
-                <button class="btn btn-primary" onclick="closeModal('alertModal')">Aceptar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Confirmación Personalizado (Sustituye a confirm) -->
-    <div class="modal-overlay" id="confirmModal">
-        <div class="modal" style="max-width: 400px; text-align: center;">
-            <h2 id="confirmTitle" style="justify-content: center;">Confirmar Acción</h2>
-            <p id="confirmMsg"></p>
-            <div class="modal-actions" style="justify-content: center;">
-                <button class="btn btn-secondary" onclick="closeConfirm(false)">Cancelar</button>
-                <button class="btn btn-primary" style="background: var(--c-trampa);" onclick="closeConfirm(true)">Eliminar</button>
-            </div>
-        </div>
-    </div>
 
     <!-- Modal Inteligencia Artificial (Estilo NotebookLM) -->
     <div class="modal-overlay" id="aiModal">
         <div class="modal ai-studio-modal">
             <div class="ai-studio-header">
                 <h2>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
                     <span>UniverSOS AI Studio</span>
                 </h2>
-                <span style="font-size: 0.78rem; color: var(--text-muted); background: var(--border-subtle); padding: 3px 8px; border-radius: 4px;">Multimodal • Análisis de Exámenes</span>
+                <span style="font-size: 0.76rem; color: var(--text-muted); background: var(--border-subtle); padding: 3px 8px; border-radius: 5px; font-weight: 600;">Multimodal • Análisis de Exámenes</span>
             </div>
 
             <div id="aiError" class="error-msg"></div>
 
             <div class="ai-studio-body">
                 <div class="ai-studio-grid">
-                    <!-- Columna Izquierda: Fuentes de Información (Estilo NotebookLM) -->
+                    <!-- Columna Izquierda: Fuentes de Información -->
                     <div class="sources-panel">
                         <div class="sources-panel-header">
                             <span class="sources-panel-title">
-                                📁 Fuentes y Exámenes
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                Fuentes y Exámenes
                             </span>
                             <span class="sources-count-badge" id="sourcesCountBadge">0 fuentes</span>
                         </div>
@@ -213,14 +195,14 @@
                         </div>
 
                         <div class="sources-list" id="aiSourcesList">
-                            <!-- Inyectado dinámicamente -->
                             <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 20px;">
                                 No has añadido fuentes aún. Sube parciales, exámenes o apuntes para que la IA los analice.
                             </div>
                         </div>
 
-                        <button class="btn btn-secondary" style="font-size: 0.78rem; padding: 6px;" onclick="promptAddTextSource()">
-                            ➕ Pegar texto/enunciado directo
+                        <button class="btn btn-secondary" style="font-size: 0.78rem; padding: 7px 10px;" onclick="promptAddTextSource()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <span>Pegar texto o enunciado directo</span>
                         </button>
                     </div>
 
@@ -239,9 +221,18 @@
                         <div>
                             <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">¿Qué deseas generar?</label>
                             <div class="mode-pills-group">
-                                <button type="button" class="mode-pill-btn active" id="modeBtnBoth" onclick="setAiGenMode('both')">📚 Completo</button>
-                                <button type="button" class="mode-pill-btn" id="modeBtnExercises" onclick="setAiGenMode('exercises')">⚙️ Solo Ejercicios</button>
-                                <button type="button" class="mode-pill-btn" id="modeBtnTheory" onclick="setAiGenMode('theory')">📖 Solo Teoría</button>
+                                <button type="button" class="mode-pill-btn active" id="modeBtnBoth" onclick="setAiGenMode('both')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+                                    <span>Completo</span>
+                                </button>
+                                <button type="button" class="mode-pill-btn" id="modeBtnExercises" onclick="setAiGenMode('exercises')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                                    <span>Solo Ejercicios</span>
+                                </button>
+                                <button type="button" class="mode-pill-btn" id="modeBtnTheory" onclick="setAiGenMode('theory')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                                    <span>Solo Teoría</span>
+                                </button>
                             </div>
                         </div>
 
@@ -277,28 +268,145 @@
             <div class="modal-actions" style="margin-top: 16px; border-top: 1px solid var(--border-subtle); padding-top: 14px;">
                 <button class="btn btn-secondary" onclick="closeModal('aiModal')">Cancelar</button>
                 <button class="btn btn-magic" id="aiSubmitBtn" onclick="generateExerciseWithAI()">
-                    <span>✨ Analizar Fuentes y Generar Estudio</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                    <span>Analizar Fuentes y Generar Estudio</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Importación JSON -->
+    <!-- Modal Universal de Importación JSON -->
     <div class="modal-overlay" id="importModal">
-        <div class="modal">
-            <h2>Importar JSON</h2>
-            <p>Arrastra un archivo JSON, selecciónalo o pega el código manualmente.</p>
+        <div class="modal" style="max-width: 560px;">
+            <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Importación Inteligente JSON</span>
+            </h2>
+            <p>Importa en un mismo lugar temas completos, teoría suelta, ejercicios individuales, listas de problemas o copias de seguridad.</p>
             
             <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                <div>Arrastra tu archivo aquí o haz clic para explorar</div>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 12 15 15"></polyline></svg>
+                <div>Arrastra cualquier archivo <strong>.json</strong> aquí o haz clic para explorar</div>
                 <input type="file" id="file-input" style="display:none" accept=".json">
             </div>
 
-            <textarea class="json-input" id="json-textarea" placeholder="O pega el código { ... } aquí directamente"></textarea>
+            <textarea class="json-input" id="json-textarea" placeholder="Pega aquí tu JSON (tema completo, teoría suelta, uno o varios ejercicios { ... } o [ ... ])"></textarea>
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeModal('importModal')">Cancelar</button>
-                <button class="btn btn-primary" onclick="importJsonData()">Procesar</button>
+                <button class="btn btn-primary" onclick="importJsonData()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>Analizar y Procesar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Previsualización, Advertencia de Faltantes y Corrección de Importación (Al Frente) -->
+    <div class="modal-overlay modal-overlay-mid" id="importPreviewModal">
+        <div class="modal" style="max-width: 560px;">
+            <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="m9 15 2 2 4-4"></path></svg>
+                <span>Confirmar Importación</span>
+            </h2>
+            <p id="importPreviewSubtitle" style="margin-bottom: 14px;">Revisa qué se ha detectado y dónde se guardará antes de aplicar los cambios.</p>
+
+            <!-- Resumen de lo detectado -->
+            <div class="import-preview-card" id="importPreviewSummary"></div>
+
+            <!-- Caja de Advertencias (si faltan campos o se auto-reparó el JSON) -->
+            <div id="importPreviewWarningsArea"></div>
+
+            <!-- Panel desplegable para Corregir tipo, asignatura, tema o modo -->
+            <div class="import-correction-panel" id="importCorrectionPanel">
+                <div style="font-size: 0.82rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 6px;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    <span>Corregir Parámetros de Importación</span>
+                </div>
+
+                <div class="import-field-group">
+                    <label>Tipo de contenido a importar</label>
+                    <select id="importOverrideType" class="text-input" onchange="onImportOverrideChange()">
+                        <option value="full_topic">Tema Completo (Teoría + Ejercicios)</option>
+                        <option value="theory_only">Solo Teoría del Tema</option>
+                        <option value="exercises_only">Ejercicios Sueltos</option>
+                        <option value="full_db">Copia de Seguridad Completa (Base de Datos)</option>
+                    </select>
+                </div>
+
+                <div id="importDestinationFields" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div class="import-field-group">
+                        <label>Asignatura Destino</label>
+                        <select id="importOverrideSubjSelect" class="text-input" onchange="onImportSubjSelectChange()"></select>
+                        <input type="text" id="importOverrideSubjCustom" class="text-input" placeholder="Escribe el nombre de la nueva asignatura..." style="display: none; margin-top: 6px !important;" oninput="updateImportPreviewSummaryUI()">
+                    </div>
+
+                    <div class="import-field-group">
+                        <label>Tema Destino</label>
+                        <select id="importOverrideTopicSelect" class="text-input" onchange="onImportTopicSelectChange()"></select>
+                        <input type="text" id="importOverrideTopicCustom" class="text-input" placeholder="Escribe el nombre del nuevo tema..." style="display: none; margin-top: 6px !important;" oninput="updateImportPreviewSummaryUI()">
+                    </div>
+
+                    <div class="import-field-group" id="importMergeModeGroup">
+                        <label>Comportamiento si el tema ya tiene ejercicios</label>
+                        <select id="importOverrideMergeMode" class="text-input" onchange="updateImportPreviewSummaryUI()">
+                            <option value="append">Añadir / Combinar con los ejercicios existentes</option>
+                            <option value="replace">Reemplazar la lista de ejercicios anterior</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('importPreviewModal')">Cancelar</button>
+                <button class="btn btn-secondary" id="btnToggleImportCorrect" onclick="toggleImportCorrectionPanel()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    <span>Corregir</span>
+                </button>
+                <button class="btn btn-primary" onclick="executeConfirmedImport()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>Confirmar e Importar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Generador de Chuleta Compacta de Alta Densidad -->
+    <div class="modal-overlay modal-overlay-mid" id="cheatsheetModal">
+        <div class="modal" style="max-width: 980px; width: 96%; max-height: 92vh; display: flex; flex-direction: column;">
+            <div class="cheatsheet-modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h2 style="margin: 0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line></svg>
+                    <span>Generador de Chuleta de Alta Densidad</span>
+                </h2>
+                <span style="font-size: 0.76rem; color: var(--text-muted); background: var(--border-subtle); padding: 3px 8px; border-radius: 5px; font-weight: 600;">Optimizado para ahorro de papel (A4)</span>
+            </div>
+
+            <div class="cheatsheet-toolbar">
+                <div class="cheatsheet-toggles">
+                    <label class="cheatsheet-check-label"><input type="checkbox" id="csIncTheory" checked onchange="renderCheatsheetPreview()"> Teoría</label>
+                    <label class="cheatsheet-check-label"><input type="checkbox" id="csIncChecklist" checked onchange="renderCheatsheetPreview()"> Conceptos Clave</label>
+                    <label class="cheatsheet-check-label"><input type="checkbox" id="csIncIdent" checked onchange="renderCheatsheetPreview()"> Identificación</label>
+                    <label class="cheatsheet-check-label"><input type="checkbox" id="csIncSteps" checked onchange="renderCheatsheetPreview()"> Algoritmos</label>
+                    <label class="cheatsheet-check-label"><input type="checkbox" id="csIncTricks" checked onchange="renderCheatsheetPreview()"> Trucos y Trampas</label>
+                    <label class="cheatsheet-check-label"><input type="checkbox" id="csIncExamples" onchange="renderCheatsheetPreview()"> Ejemplos Resueltos</label>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 0.76rem; font-weight: 700; color: var(--text-muted);">Densidad:</span>
+                    <select id="csColsSelect" class="text-input" style="margin: 0; padding: 5px 8px; font-size: 0.78rem; width: auto;" onchange="renderCheatsheetPreview()">
+                        <option value="2">2 Columnas (Estándar)</option>
+                        <option value="3" selected>3 Columnas (Ultra-Compacta)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="cheatsheet-preview-scroll" id="cheatsheetPreviewContainer"></div>
+
+            <div class="modal-actions cheatsheet-modal-footer" style="margin-top: 14px;">
+                <button class="btn btn-secondary" onclick="closeModal('cheatsheetModal')">Cerrar</button>
+                <button class="btn btn-primary" onclick="triggerCheatsheetPrint()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect width="12" height="8" x="6" y="14"></rect></svg>
+                    <span>Imprimir / Guardar PDF</span>
+                </button>
             </div>
         </div>
     </div>
@@ -306,12 +414,21 @@
     <!-- Modal Base de Datos -->
     <div class="modal-overlay" id="dbModal">
         <div class="modal">
-            <h2>Base de Datos</h2>
-            <p>Exporta todo tu conocimiento para guardarlo en iCloud/Drive o restáuralo desde un archivo previo.</p>
+            <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                <span>Base de Datos</span>
+            </h2>
+            <p>Exporta todo tu conocimiento para guardarlo localmente o restáuralo desde un archivo previo.</p>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button class="btn btn-primary" style="width: 100%;" onclick="exportDatabase()">Exportar Backup (.json)</button>
+                <button class="btn btn-primary" style="width: 100%;" onclick="exportDatabase()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span>Exportar Backup (.json)</span>
+                </button>
                 <input type="file" id="db-file-input" style="display:none" accept=".json" onchange="importFullDatabase(event)">
-                <button class="btn btn-secondary" style="width: 100%;" onclick="document.getElementById('db-file-input').click()">Restaurar Backup</button>
+                <button class="btn btn-secondary" style="width: 100%;" onclick="document.getElementById('db-file-input').click()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <span>Restaurar Backup</span>
+                </button>
             </div>
             <div class="modal-actions" style="margin-top: 24px;">
                 <button class="btn btn-secondary" onclick="closeModal('dbModal')">Cerrar</button>
@@ -331,64 +448,15 @@
         </div>
     </div>
 
-    <!-- Modal Añadir Ejercicio (IA, Pegar JSON o Manual) -->
-    <div class="modal-overlay" id="newExerciseModal">
-        <div class="modal" style="max-width: 600px; width: 95%;">
-            <h2>➕ Añadir Nuevo Ejercicio</h2>
-            <p style="margin-bottom: 16px;">Selecciona el método para añadir un nuevo ejercicio tipo al tema actual.</p>
-
-            <div class="mode-pills-group" style="margin-bottom: 16px;">
-                <button type="button" class="mode-pill-btn active" id="tabAddAi" onclick="setAddExerciseTab('ai')">✨ Con IA</button>
-                <button type="button" class="mode-pill-btn" id="tabAddJson" onclick="setAddExerciseTab('json')">📋 Pegar JSON</button>
-                <button type="button" class="mode-pill-btn" id="tabAddManual" onclick="setAddExerciseTab('manual')">✍️ Rápido</button>
-            </div>
-
-            <!-- Panel 1: Generar con IA -->
-            <div id="addExercisePanelAi" style="display: flex; flex-direction: column; gap: 12px;">
-                <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; text-align: center;">
-                    <div style="font-size: 2rem; margin-bottom: 8px;">✨</div>
-                    <div style="font-weight: 700; color: var(--text-heading); margin-bottom: 4px;">Generar Nuevos Ejercicios con Gemini</div>
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Abre el Estudio IA con tus fuentes y exámenes para generar ejercicios adicionales optimizados con análisis de frecuencia.</p>
-                    <button class="btn btn-magic" style="width: 100%; justify-content: center;" onclick="openAIFromNewExercise()">
-                        <span>Abrir Estudio IA con Fuentes</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Panel 2: Pegar JSON -->
-            <div id="addExercisePanelJson" style="display: none; flex-direction: column; gap: 12px;">
-                <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading);">Pega el objeto o array JSON del ejercicio:</label>
-                <textarea id="addExerciseJsonInput" class="text-input" placeholder='{\n  "title": "Tipo: Integración de Densidades Conjuntas",\n  "probabilidad": 85,\n  "algoritmo": [...],\n  "ejemploCompleto": "..."\n}' style="height: 180px; font-family: var(--font-mono); font-size: 0.8rem; resize: vertical;"></textarea>
-                <div class="modal-actions" style="margin-top: 4px;">
-                    <button class="btn btn-secondary" onclick="closeModal('newExerciseModal')">Cancelar</button>
-                    <button class="btn btn-primary" onclick="submitJsonExercise()">Insertar Ejercicio</button>
-                </div>
-            </div>
-
-            <!-- Panel 3: Rápido / Manual -->
-            <div id="addExercisePanelManual" style="display: none; flex-direction: column; gap: 12px;">
-                <div>
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Título del Ejercicio Tipo *</label>
-                    <input type="text" id="addExerciseTitleInput" class="text-input" placeholder="Ej: Tipo 4: Cálculo de Probabilidades en Regiones Circulares" autocomplete="off">
-                </div>
-                <div>
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Probabilidad estimada en Examen (%)</label>
-                    <input type="number" id="addExerciseProbInput" class="text-input" placeholder="75" min="1" max="100" value="70">
-                </div>
-                <div class="modal-actions" style="margin-top: 4px;">
-                    <button class="btn btn-secondary" onclick="closeModal('newExerciseModal')">Cancelar</button>
-                    <button class="btn btn-primary" onclick="submitManualExercise()">Crear Ejercicio</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal Buscador Global (Ctrl+K) -->
     <div class="modal-overlay" id="searchModal">
         <div class="modal search-modal-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h2 style="margin: 0; font-size: 1.2rem;">🔍 Buscador Global</h2>
-                <span style="font-size: 0.75rem; color: var(--text-muted); background: var(--border-subtle); padding: 2px 6px; border-radius: 4px;">Esc para cerrar</span>
+                <h2 style="margin: 0; font-size: 1.15rem;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <span>Buscador Global</span>
+                </h2>
+                <span style="font-size: 0.74rem; color: var(--text-muted); background: var(--border-subtle); padding: 2px 7px; border-radius: 4px; font-weight: 600;">Esc para cerrar</span>
             </div>
             <div class="search-input-wrapper">
                 <svg class="search-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -398,53 +466,113 @@
         </div>
     </div>
 
-    <!-- Modal Sincronización Cloud (Supabase) -->
+    <!-- Modal Sincronización Cloud (Supabase Simplificado) -->
     <div class="modal-overlay" id="cloudModal">
-        <div class="modal" style="max-width: 520px;">
-            <h2>☁️ Sincronización en la Nube</h2>
-            <p>Conecta UniverSOS con tu proyecto gratuito de Supabase para tener tus apuntes sincronizados en tu portátil, tablet y móvil.</p>
+        <div class="modal" style="max-width: 500px;">
+            <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+                <span>Sincronización en la Nube</span>
+            </h2>
+            <p>Introduce tu identificador y contraseña para sincronizar tus apuntes entre ordenador, tablet y móvil.</p>
 
-            <div id="cloudStatusDiv" style="margin-bottom: 14px; font-size: 0.85rem; padding: 10px 12px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px;"></div>
+            <div id="cloudStatusDiv" style="margin-bottom: 14px; font-size: 0.84rem; padding: 10px 12px; background: var(--bg-body); border: 1px solid var(--border-subtle); border-radius: 8px;"></div>
 
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+            <!-- Campos Principales (Únicos visibles a primera vista) -->
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
                 <div>
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Project URL de Supabase</label>
-                    <input type="text" id="cloudUrlInput" class="text-input" placeholder="https://xyzcompany.supabase.co" autocomplete="off">
+                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">ID de Usuario / Sincronización</label>
+                    <input type="text" id="cloudSyncIdInput" class="text-input" placeholder="Ej: samuel_uni" autocomplete="off" style="margin-bottom: 2px;">
                 </div>
                 <div>
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Anon / Public Key</label>
-                    <input type="password" id="cloudKeyInput" class="text-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off">
+                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Contraseña / PIN de Protección (Opcional)</label>
+                    <input type="password" id="cloudSyncPassInput" class="text-input" placeholder="Protege tu ID frente a accesos de terceros..." autocomplete="off" style="margin-bottom: 2px;">
+                    <span style="font-size: 0.73rem; color: var(--text-muted);">Deriva una clave criptográfica única (SHA-256) para que nadie pueda leer ni sobrescribir tu ID.</span>
                 </div>
-                <div>
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Código de Sincronización (ID de Estudiante)</label>
-                    <input type="text" id="cloudSyncIdInput" class="text-input" placeholder="mi_codigo_estudiante_123" autocomplete="off">
-                    <span style="font-size: 0.75rem; color: var(--text-muted);">Usa el mismo código en todos tus dispositivos para compartir los mismos apuntes.</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
                     <input type="checkbox" id="cloudAutoSyncCheck" style="width: 16px; height: 16px; cursor: pointer;">
-                    <label for="cloudAutoSyncCheck" style="font-size: 0.85rem; cursor: pointer; color: var(--text-heading);">Auto-sincronizar al guardar cambios</label>
+                    <label for="cloudAutoSyncCheck" style="font-size: 0.84rem; cursor: pointer; color: var(--text-heading); font-weight: 600;">Auto-sincronizar al guardar cambios</label>
                 </div>
             </div>
 
-            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-                <button class="btn btn-primary" style="flex: 1;" onclick="pushToCloud()">⬆️ Subir (Push)</button>
-                <button class="btn btn-secondary" style="flex: 1;" onclick="pullFromCloud()">⬇️ Descargar (Pull)</button>
+            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="pushToCloud()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <span>Subir a la Nube</span>
+                </button>
+                <button class="btn btn-secondary" style="flex: 1;" onclick="pullFromCloud()">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span>Descargar</span>
+                </button>
             </div>
 
-            <details style="font-size: 0.8rem; color: var(--text-muted); background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 10px; margin-bottom: 16px;">
-                <summary style="cursor: pointer; font-weight: 700; color: var(--primary);">📋 Ver SQL para crear la tabla en Supabase (1 clic)</summary>
-                <pre style="margin-top: 8px; font-family: var(--font-mono); font-size: 0.75rem; overflow-x: auto; background: var(--step-content-bg); padding: 8px; border-radius: 4px;">create table universos_sync (
+            <!-- Botón para desplegar Ajustes Avanzados (URL, Anon Key y SQL ocultos por defecto) -->
+            <button type="button" class="cloud-advanced-toggle" onclick="toggleCloudAdvancedSettings()">
+                <span style="display: inline-flex; align-items: center; gap: 7px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Ajustes de Servidor (URL, API Key y SQL)
+                </span>
+                <svg id="cloudAdvChevron" class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+
+            <div class="cloud-advanced-panel" id="cloudAdvancedPanel">
+                <div>
+                    <label style="font-size: 0.76rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Project URL de Supabase (Por defecto / Personalizada)</label>
+                    <input type="text" id="cloudUrlInput" class="text-input" placeholder="https://xyzcompany.supabase.co" autocomplete="off" style="margin-bottom: 0; font-size: 0.8rem; padding: 8px 10px;">
+                </div>
+                <div>
+                    <label style="font-size: 0.76rem; font-weight: 700; color: var(--text-heading); display: block; margin-bottom: 4px;">Anon / Public API Key</label>
+                    <input type="password" id="cloudKeyInput" class="text-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off" style="margin-bottom: 0; font-size: 0.8rem; padding: 8px 10px;">
+                </div>
+
+                <button type="button" class="btn btn-secondary" style="font-size: 0.76rem; padding: 7px 10px; width: 100%;" onclick="copyCloudMobileMagicLink()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    <span>Copiar Enlace Mágico para auto-configurar el Móvil</span>
+                </button>
+
+                <details style="font-size: 0.78rem; color: var(--text-muted); background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 8px 10px;">
+                    <summary style="cursor: pointer; font-weight: 700; color: var(--primary);">Ver SQL para crear la tabla en Supabase</summary>
+                    <pre style="margin-top: 8px; font-family: var(--font-mono); font-size: 0.72rem; overflow-x: auto; background: var(--step-content-bg); padding: 8px; border-radius: 4px;">create table universos_sync (
   id text primary key,
   data jsonb,
   updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 alter table universos_sync enable row level security;
-create policy "Acceso público universos" on universos_sync for all using (true);</pre>
-            </details>
+create policy "Acceso universos" on universos_sync for all using (true);</pre>
+                </details>
+            </div>
 
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeModal('cloudModal')">Cerrar</button>
                 <button class="btn btn-primary" onclick="saveCloudSettings()">Guardar Ajustes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación Personalizado (SIEMPRE AL FRENTE z-index: 400) -->
+    <div class="modal-overlay modal-overlay-front" id="confirmModal">
+        <div class="modal" style="max-width: 410px; text-align: center;">
+            <h2 id="confirmTitle" style="justify-content: center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--c-trampa);"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>Confirmar Acción</span>
+            </h2>
+            <p id="confirmMsg"></p>
+            <div class="modal-actions" style="justify-content: center;">
+                <button class="btn btn-secondary" onclick="closeConfirm(false)">Cancelar</button>
+                <button class="btn btn-primary" style="background: var(--c-trampa); color: #fff;" onclick="closeConfirm(true)">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Avisos y Errores Personalizado (SIEMPRE AL FRENTE z-index: 400) -->
+    <div class="modal-overlay modal-overlay-front" id="alertModal">
+        <div class="modal" style="max-width: 430px; text-align: center;">
+            <h2 id="alertTitle" style="justify-content: center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span id="alertTitleText">Aviso</span>
+            </h2>
+            <div id="alertMsg" style="color: var(--text-body); margin-bottom: 20px; font-size: 0.9rem; line-height: 1.55;"></div>
+            <div class="modal-actions" style="justify-content: center;">
+                <button class="btn btn-primary" onclick="closeModal('alertModal')">Entendido</button>
             </div>
         </div>
     </div>

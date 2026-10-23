@@ -21,7 +21,17 @@ let confirmCallback = null;
 let isExamMode = false;
 let currentMasteryFilter = 'all'; // 'all' | 'mastered' | 'review' | 'doubt'
 let currentExerciseIndex = 0;
-let revealedExercisesInExam = new Set();
+
+// Estado del nuevo Simulador de Examen Interactivo
+let examSimState = {
+    mode: 'blind', // 'blind' (Simulacro sorpresa sin ver título) | 'guided' (Entrenamiento del ejercicio actual)
+    scope: 'topic', // 'topic' (Tema actual) | 'subject' (Toda la asignatura)
+    queue: [], // Array de { subjId, topicId, topicName, exIndex, exData, selectedStmtIdx, unlockedIdent, unlockedStepsCount, unlockedTraps, fullRevealed, grade }
+    currentPos: 0,
+    timerSeconds: 0,
+    timerRunning: false,
+    timerInterval: null
+};
 
 function loadDB() {
     const savedData = localStorage.getItem(STORAGE_KEY);
@@ -34,7 +44,6 @@ function loadDB() {
         }
     }
 
-    // Restaurar asignatura y tema activos guardados
     const savedSubjId = localStorage.getItem(ACTIVE_SUBJ_KEY);
     const savedTopicId = localStorage.getItem(ACTIVE_TOPIC_KEY);
 
@@ -53,7 +62,6 @@ function loadDB() {
         }
     }
 
-    // Cargar preferencia de tema claro/oscuro
     const savedTheme = localStorage.getItem(THEME_KEY);
     if (savedTheme === 'light') {
         document.body.classList.remove('dark');
@@ -61,7 +69,6 @@ function loadDB() {
         document.body.classList.add('dark');
     }
 
-    // Cargar preferencia de modo examen
     isExamMode = localStorage.getItem(EXAM_MODE_KEY) === 'true';
     updateExamModeUI();
 }
@@ -80,22 +87,33 @@ function updateExamModeUI() {
     if (btn) {
         if (isExamMode) {
             btn.classList.add('active');
-            btn.title = 'Modo Examen ACTIVO (clic para volver a modo estudio)';
+            btn.title = 'Salir del Simulador de Examen y volver a Modo Estudio';
         } else {
             btn.classList.remove('active');
-            btn.title = 'Modo Examen / Práctica (oculta soluciones para practicar)';
+            btn.title = 'Abrir Simulador de Examen y Práctica Activa';
         }
     }
 }
 
 function toggleExamMode() {
+    if (!activeSubjectId) {
+        customAlert('Selecciona primero una Asignatura y un Tema para iniciar el Simulador de Examen.');
+        return;
+    }
+
     isExamMode = !isExamMode;
     localStorage.setItem(EXAM_MODE_KEY, isExamMode ? 'true' : 'false');
     updateExamModeUI();
-    
-    // Si estamos viendo un ejercicio, re-renderizar para aplicar el modo
-    if (activeTopicId && document.getElementById(`card-ex-${currentExerciseIndex}`)) {
-        selectExercise(currentExerciseIndex);
+
+    if (isExamMode) {
+        if (typeof startExamSimulatorSession === 'function') {
+            startExamSimulatorSession('blind', 'topic');
+        }
+    } else {
+        if (typeof stopExamTimer === 'function') stopExamTimer();
+        if (activeTopicId) {
+            selectExercise(currentExerciseIndex || 0);
+        }
     }
 }
 
@@ -115,15 +133,24 @@ function importFullDatabase(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
-            appDB = JSON.parse(e.target.result);
-            saveDB();
-            activeSubjectId = null;
-            activeTopicId = null;
-            renderDropdowns();
-            closeModal('dbModal');
-            customAlert("Base de datos restaurada con éxito.");
+            const { data } = parseResilientJson(e.target.result);
+            if (data && Array.isArray(data.subjects)) {
+                appDB = data;
+                saveDB();
+                activeSubjectId = appDB.subjects.length > 0 ? appDB.subjects[0].id : null;
+                activeTopicId = (activeSubjectId && appDB.subjects[0].topics.length > 0) ? appDB.subjects[0].topics[0].id : null;
+                renderDropdowns();
+                if (activeTopicId) renderTopicExercises();
+                closeModal('dbModal');
+                customAlert('Base de datos restaurada con éxito.', 'Backup Restaurado');
+            } else {
+                // Si el usuario subió un JSON de tema o ejercicios en vez de backup, redirigirlo al motor universal
+                closeModal('dbModal');
+                const analysis = analyzeImportedData(data, []);
+                openImportPreviewModal(analysis);
+            }
         } catch(err) {
-            customAlert("Error al leer el archivo de base de datos.");
+            customAlert('Error al leer el archivo: ' + err.message, 'Error de Restauración');
         } finally {
             event.target.value = '';
         }

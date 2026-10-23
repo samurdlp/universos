@@ -1,18 +1,31 @@
 /**
- * Sincronización en la Nube (Supabase / REST Cloud)
+ * Sincronización en la Nube Simplificada y Protegida (Supabase / REST Cloud)
  * 
- * Permite sincronizar todo el conocimiento universitario entre dispositivos (móvil, tablet, PC)
- * manteniendo la funcionalidad 100% offline con localStorage.
+ * - A primera vista solo solicita el ID de Usuario y (opcionalmente) una Contraseña/PIN.
+ * - La URL y Anon API Key se cargan por defecto y permanecen ocultas bajo "Ajustes de Servidor".
+ * - Si se introduce contraseña, deriva un identificador criptográfico SHA-256 para impedir
+ *   que terceros puedan leer o sobrescribir los apuntes aunque la Anon Key sea pública.
  */
+
+// Valores por defecto del proyecto Supabase (puedes pegarlos aquí para dejarlos fijos en el código)
+const DEFAULT_SUPABASE_URL = '';
+const DEFAULT_SUPABASE_KEY = '';
 
 let autoSyncTimeout = null;
 
 function getCloudConfig() {
+    const storedUrl = (localStorage.getItem('universos_supabase_url') || DEFAULT_SUPABASE_URL || '').trim().replace(/\/+$/, '');
+    const storedKey = (localStorage.getItem('universos_supabase_key') || DEFAULT_SUPABASE_KEY || '').trim();
+    const syncId = (localStorage.getItem('universos_sync_id') || '').trim() || generateDefaultSyncId();
+    const syncPass = (localStorage.getItem('universos_sync_pass') || '').trim();
+    const autoSync = localStorage.getItem('universos_auto_sync') === 'true';
+
     return {
-        url: (localStorage.getItem('universos_supabase_url') || '').trim().replace(/\/+$/, ''),
-        key: (localStorage.getItem('universos_supabase_key') || '').trim(),
-        syncId: (localStorage.getItem('universos_sync_id') || '').trim() || generateDefaultSyncId(),
-        autoSync: localStorage.getItem('universos_auto_sync') === 'true'
+        url: storedUrl,
+        key: storedKey,
+        syncId,
+        syncPass,
+        autoSync
     };
 }
 
@@ -22,62 +35,184 @@ function generateDefaultSyncId() {
     return id;
 }
 
+async function computeEffectiveSyncKey(syncId, syncPass) {
+    const cleanId = (syncId || 'default').trim();
+    const cleanPass = (syncPass || '').trim();
+    if (!cleanPass) return cleanId;
+
+    const raw = `${cleanId}::universos_salt_v2::${cleanPass}`;
+    if (window.crypto && window.crypto.subtle) {
+        try {
+            const msgBuffer = new TextEncoder().encode(raw);
+            const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 20);
+            return `${cleanId}_sec_${hashHex}`;
+        } catch (e) {
+            // Fallback determinista si se ejecuta en contexto sin WebCrypto (ej. file://)
+        }
+    }
+
+    let h1 = 0xdeadbeef ^ raw.length;
+    let h2 = 0x41c6ce57 ^ raw.length;
+    for (let i = 0, ch; i < raw.length; i++) {
+        ch = raw.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    const hex = (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
+    return `${cleanId}_sec_${hex}`;
+}
+
+function toggleCloudAdvancedSettings() {
+    const panel = document.getElementById('cloudAdvancedPanel');
+    const chevron = document.getElementById('cloudAdvChevron');
+    if (panel) {
+        const isOpen = panel.classList.toggle('open');
+        if (chevron) {
+            chevron.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+    }
+}
+
 function openCloudModal() {
     const cfg = getCloudConfig();
     
     const urlInput = document.getElementById('cloudUrlInput');
     const keyInput = document.getElementById('cloudKeyInput');
     const syncIdInput = document.getElementById('cloudSyncIdInput');
+    const syncPassInput = document.getElementById('cloudSyncPassInput');
     const autoSyncCheck = document.getElementById('cloudAutoSyncCheck');
     const statusDiv = document.getElementById('cloudStatusDiv');
+    const advPanel = document.getElementById('cloudAdvancedPanel');
+    const chevron = document.getElementById('cloudAdvChevron');
 
     if (urlInput) urlInput.value = cfg.url;
     if (keyInput) keyInput.value = cfg.key;
     if (syncIdInput) syncIdInput.value = cfg.syncId;
+    if (syncPassInput) syncPassInput.value = cfg.syncPass;
     if (autoSyncCheck) autoSyncCheck.checked = cfg.autoSync;
+
+    // Por defecto el panel de servidor (URL, Key, SQL) permanece escondido salvo que falten credenciales
+    if (advPanel) {
+        if (!cfg.url || !cfg.key) {
+            advPanel.classList.add('open');
+            if (chevron) chevron.style.transform = 'rotate(180deg)';
+        } else {
+            advPanel.classList.remove('open');
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+        }
+    }
     
     if (statusDiv) {
         if (cfg.url && cfg.key) {
-            statusDiv.innerHTML = `<span style="color:var(--c-truco);">● Conexión configurada</span> para identificador: <code>${cfg.syncId}</code>`;
+            const lockLabel = cfg.syncPass ? ' (Protegido con Contraseña)' : '';
+            statusDiv.innerHTML = `<span style="color:var(--c-truco); font-weight:700;">● Servidor Conectado</span> — ID: <code>${sanitizeHTML(cfg.syncId)}</code>${lockLabel}`;
         } else {
-            statusDiv.innerHTML = `<span style="color:var(--text-muted);">● Modo Offline (sin configurar)</span>. Introduce tus datos de Supabase para activar la sincronización.`;
+            statusDiv.innerHTML = `<span style="color:var(--c-error); font-weight:700;">● Servidor pendiente de configurar</span>. Introduce por única vez la URL y Anon Key en el apartado inferior de Ajustes de Servidor.`;
         }
     }
 
     openModal('cloudModal');
 }
 
-function saveCloudSettings() {
-    const url = (document.getElementById('cloudUrlInput').value || '').trim();
-    const key = (document.getElementById('cloudKeyInput').value || '').trim();
-    const syncId = (document.getElementById('cloudSyncIdInput').value || '').trim() || generateDefaultSyncId();
-    const autoSync = document.getElementById('cloudAutoSyncCheck').checked;
+function saveCloudSettings(silent = false) {
+    const urlEl = document.getElementById('cloudUrlInput');
+    const keyEl = document.getElementById('cloudKeyInput');
+    const syncIdEl = document.getElementById('cloudSyncIdInput');
+    const syncPassEl = document.getElementById('cloudSyncPassInput');
+    const autoSyncEl = document.getElementById('cloudAutoSyncCheck');
 
-    localStorage.setItem('universos_supabase_url', url);
-    localStorage.setItem('universos_supabase_key', key);
+    const url = (urlEl ? urlEl.value : '').trim().replace(/\/+$/, '') || DEFAULT_SUPABASE_URL;
+    const key = (keyEl ? keyEl.value : '').trim() || DEFAULT_SUPABASE_KEY;
+    const syncId = (syncIdEl ? syncIdEl.value : '').trim() || generateDefaultSyncId();
+    const syncPass = (syncPassEl ? syncPassEl.value : '').trim();
+    const autoSync = autoSyncEl ? autoSyncEl.checked : false;
+
+    if (url) localStorage.setItem('universos_supabase_url', url);
+    if (key) localStorage.setItem('universos_supabase_key', key);
     localStorage.setItem('universos_sync_id', syncId);
+    localStorage.setItem('universos_sync_pass', syncPass);
     localStorage.setItem('universos_auto_sync', autoSync ? 'true' : 'false');
 
-    const statusDiv = document.getElementById('cloudStatusDiv');
-    if (statusDiv) {
-        statusDiv.innerHTML = `<span style="color:var(--c-truco);">✓ Ajustes guardados correctamente.</span>`;
+    if (!silent) {
+        const statusDiv = document.getElementById('cloudStatusDiv');
+        if (statusDiv) {
+            statusDiv.innerHTML = `<span style="color:var(--c-truco); font-weight:700;">Ajustes guardados correctamente.</span>`;
+        }
+    }
+}
+
+function copyCloudMobileMagicLink() {
+    saveCloudSettings(true);
+    const cfg = getCloudConfig();
+    if (!cfg.url || !cfg.key) {
+        customAlert('Introduce primero la Project URL y la Anon Key de Supabase para generar el enlace de auto-configuración.', 'Faltan Datos del Servidor');
+        return;
+    }
+
+    const payloadObj = {
+        u: cfg.url,
+        k: cfg.key,
+        id: cfg.syncId
+    };
+    const encoded = btoa(encodeURIComponent(JSON.stringify(payloadObj)));
+    const baseUrl = window.location.href.split('#')[0];
+    const magicLink = `${baseUrl}#cloud_cfg=${encoded}`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(magicLink).then(() => {
+            customAlert('¡Enlace mágico copiado al portapapeles!<br><br>Envíatelo a tu móvil o tablet (por WhatsApp, Telegram o notas). Al abrirlo una sola vez, tu móvil guardará la URL y API Key automáticamente para siempre.', 'Enlace Mágico Copiado');
+        }).catch(() => {
+            prompt('Copia este enlace y ábrelo en tu móvil:', magicLink);
+        });
+    } else {
+        prompt('Copia este enlace y ábrelo en tu móvil:', magicLink);
+    }
+}
+
+function checkUrlCloudMagicConfig() {
+    const hash = window.location.hash || '';
+    if (hash.startsWith('#cloud_cfg=')) {
+        try {
+            const encoded = hash.replace('#cloud_cfg=', '').trim();
+            const decoded = JSON.parse(decodeURIComponent(atob(encoded)));
+            if (decoded.u && decoded.k) {
+                localStorage.setItem('universos_supabase_url', decoded.u);
+                localStorage.setItem('universos_supabase_key', decoded.k);
+                if (decoded.id) localStorage.setItem('universos_sync_id', decoded.id);
+                localStorage.setItem('universos_auto_sync', 'true');
+                history.replaceState(null, document.title, window.location.pathname + window.location.search);
+                setTimeout(() => {
+                    customAlert('¡Servidor Supabase configurado automáticamente en este dispositivo! Ahora solo necesitas tu ID y pulsar Descargar.', 'Sincronización Lista');
+                }, 400);
+            }
+        } catch (e) {
+            console.warn('No se pudo leer cloud_cfg de la URL:', e);
+        }
     }
 }
 
 async function pushToCloud() {
+    saveCloudSettings(true);
     const cfg = getCloudConfig();
     const statusDiv = document.getElementById('cloudStatusDiv');
 
     if (!cfg.url || !cfg.key) {
-        customAlert("Configura primero la URL del proyecto y la Anon Key de Supabase.");
+        const advPanel = document.getElementById('cloudAdvancedPanel');
+        if (advPanel) advPanel.classList.add('open');
+        customAlert('Configura por primera vez la URL y la Anon Key de Supabase en la sección "Ajustes de Servidor".', 'Configuración Requerida');
         return;
     }
 
-    if (statusDiv) statusDiv.innerHTML = `<span style="color:var(--primary);">⏳ Subiendo apuntes a la nube...</span>`;
+    if (statusDiv) statusDiv.innerHTML = `<span style="color:var(--primary); font-weight:600;">Subiendo apuntes a la nube...</span>`;
 
     try {
+        const effectiveKey = await computeEffectiveSyncKey(cfg.syncId, cfg.syncPass);
         const payload = {
-            id: cfg.syncId,
+            id: effectiveKey,
             data: appDB,
             updated_at: new Date().toISOString()
         };
@@ -99,33 +234,37 @@ async function pushToCloud() {
         }
 
         if (statusDiv) {
-            statusDiv.innerHTML = `<span style="color:var(--c-truco);">✓ ¡Subida completada con éxito!</span> Tus apuntes están seguros en Supabase.`;
+            statusDiv.innerHTML = `<span style="color:var(--c-truco); font-weight:700;">¡Subida completada con éxito!</span> Tus apuntes están sincronizados bajo el ID <code>${sanitizeHTML(cfg.syncId)}</code>.`;
         } else {
-            customAlert("¡Apuntes subidos y respaldados en la nube con éxito!");
+            customAlert('¡Apuntes subidos y respaldados en la nube con éxito!');
         }
     } catch (e) {
-        console.error("Error al sincronizar con Supabase:", e);
+        console.error('Error al sincronizar con Supabase:', e);
         if (statusDiv) {
-            statusDiv.innerHTML = `<span style="color:var(--c-trampa);">✗ Error al subir:</span> ${e.message}<br><small style="color:var(--text-muted)">¿Has creado la tabla 'universos_sync'? Revisa las instrucciones de configuración.</small>`;
+            statusDiv.innerHTML = `<span style="color:var(--c-trampa); font-weight:700;">Error al subir:</span> ${sanitizeHTML(e.message)}`;
         } else {
-            customAlert("Error al conectar con la nube: " + e.message);
+            customAlert('Error al conectar con la nube: ' + e.message, 'Error de Sincronización');
         }
     }
 }
 
 async function pullFromCloud() {
+    saveCloudSettings(true);
     const cfg = getCloudConfig();
     const statusDiv = document.getElementById('cloudStatusDiv');
 
     if (!cfg.url || !cfg.key) {
-        customAlert("Configura primero la URL del proyecto y la Anon Key de Supabase.");
+        const advPanel = document.getElementById('cloudAdvancedPanel');
+        if (advPanel) advPanel.classList.add('open');
+        customAlert('Configura primero la URL y la Anon Key de Supabase en "Ajustes de Servidor".', 'Configuración Requerida');
         return;
     }
 
-    if (statusDiv) statusDiv.innerHTML = `<span style="color:var(--primary);">⏳ Descargando apuntes desde la nube...</span>`;
+    if (statusDiv) statusDiv.innerHTML = `<span style="color:var(--primary); font-weight:600;">Descargando apuntes desde la nube...</span>`;
 
     try {
-        const response = await fetch(`${cfg.url}/rest/v1/universos_sync?id=eq.${encodeURIComponent(cfg.syncId)}&select=*`, {
+        const effectiveKey = await computeEffectiveSyncKey(cfg.syncId, cfg.syncPass);
+        const response = await fetch(`${cfg.url}/rest/v1/universos_sync?id=eq.${encodeURIComponent(effectiveKey)}&select=*`, {
             method: 'GET',
             headers: {
                 'apikey': cfg.key,
@@ -141,33 +280,32 @@ async function pullFromCloud() {
 
         const data = await response.json();
         if (!data || data.length === 0 || !data[0].data) {
+            const passHint = cfg.syncPass ? ' Verifica que el ID y la contraseña coincidan con los que usaste al subir.' : '';
             if (statusDiv) {
-                statusDiv.innerHTML = `<span style="color:var(--c-error);">⚠️ No se encontraron datos</span> para el identificador <code>${cfg.syncId}</code>. Prueba a subir primero tus apuntes.`;
+                statusDiv.innerHTML = `<span style="color:var(--c-error); font-weight:700;">No se encontraron datos</span> para <code>${sanitizeHTML(cfg.syncId)}</code>.${passHint}`;
             } else {
-                customAlert(`No hay datos en la nube para el identificador "${cfg.syncId}".`);
+                customAlert(`No hay datos en la nube para "${cfg.syncId}".${passHint}`);
             }
             return;
         }
 
-        // Cargar y persistir base de datos descargada
         appDB = data[0].data;
         saveDB();
-        activeSubjectId = null;
-        activeTopicId = null;
+        activeSubjectId = appDB.subjects.length > 0 ? appDB.subjects[0].id : null;
+        activeTopicId = (activeSubjectId && appDB.subjects[0].topics.length > 0) ? appDB.subjects[0].topics[0].id : null;
         renderDropdowns();
+        if (activeTopicId) renderTopicExercises();
 
         if (statusDiv) {
-            statusDiv.innerHTML = `<span style="color:var(--c-truco);">✓ ¡Datos sincronizados!</span> Se han actualizado tus asignaturas y temas.`;
-        } else {
-            customAlert("¡Datos descargados y actualizados con éxito!");
+            statusDiv.innerHTML = `<span style="color:var(--c-truco); font-weight:700;">¡Datos sincronizados!</span> Se han actualizado tus asignaturas y temas.`;
         }
         closeModal('cloudModal');
     } catch (e) {
-        console.error("Error al descargar de Supabase:", e);
+        console.error('Error al descargar de Supabase:', e);
         if (statusDiv) {
-            statusDiv.innerHTML = `<span style="color:var(--c-trampa);">✗ Error al descargar:</span> ${e.message}`;
+            statusDiv.innerHTML = `<span style="color:var(--c-trampa); font-weight:700;">Error al descargar:</span> ${sanitizeHTML(e.message)}`;
         } else {
-            customAlert("Error al descargar desde la nube: " + e.message);
+            customAlert('Error al descargar desde la nube: ' + e.message, 'Error de Sincronización');
         }
     }
 }
@@ -186,6 +324,7 @@ async function pushToCloudSilent() {
     const cfg = getCloudConfig();
     if (!cfg.url || !cfg.key) return;
     try {
+        const effectiveKey = await computeEffectiveSyncKey(cfg.syncId, cfg.syncPass);
         await fetch(`${cfg.url}/rest/v1/universos_sync?on_conflict=id`, {
             method: 'POST',
             headers: {
@@ -195,13 +334,12 @@ async function pushToCloudSilent() {
                 'Prefer': 'resolution=merge-duplicates,return=minimal'
             },
             body: JSON.stringify({
-                id: cfg.syncId,
+                id: effectiveKey,
                 data: appDB,
                 updated_at: new Date().toISOString()
             })
         });
-        console.log("Auto-sincronización en la nube completada.");
-    } catch(e) {
-        console.warn("Fallo silencioso en auto-sincronización:", e);
+    } catch (e) {
+        console.warn('Fallo silencioso en auto-sincronización:', e);
     }
 }

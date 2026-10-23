@@ -238,11 +238,11 @@ function renderSourcesList() {
         let statusBadge = '';
         if (src.isBinary) {
             if (src.status === 'ready' && src.processedText) {
-                statusBadge = `<span class="source-status-badge cached" title="Documento ya procesado y optimizado en caché local. No consume tokens de visión adicionales.">⚡ Optimizado</span>`;
+                statusBadge = `<span class="source-status-badge cached" title="Documento ya procesado y optimizado en caché local."><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Optimizado</span>`;
             } else if (src.status === 'processing') {
-                statusBadge = `<span class="source-status-badge processing" title="Procesando primera lectura con Gemini...">⏳ Procesando...</span>`;
+                statusBadge = `<span class="source-status-badge processing" title="Procesando primera lectura con Gemini..."><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Procesando...</span>`;
             } else {
-                statusBadge = `<span class="source-status-badge pending" title="Pendiente de primera lectura">📥 Sin procesar</span>`;
+                statusBadge = `<span class="source-status-badge pending" title="Pendiente de primera lectura"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Sin procesar</span>`;
             }
         }
 
@@ -257,11 +257,11 @@ function renderSourcesList() {
                 </div>
                 <div style="display: flex; gap: 4px; align-items: center;">
                     ${src.processedText && src.isBinary ? `
-                        <button class="act-btn" onclick="viewSourceExtraction('${src.id}')" title="Ver texto técnico extraído y guardado" style="padding: 2px 5px; font-size: 0.7rem;">
-                            👁️
+                        <button class="act-btn" onclick="viewSourceExtraction('${src.id}')" title="Ver texto técnico extraído y guardado" style="padding: 4px;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </button>
                     ` : ''}
-                    <button class="act-btn delete" onclick="removeSource('${src.id}')" title="Quitar fuente" style="padding: 2px;">
+                    <button class="act-btn delete" onclick="removeSource('${src.id}')" title="Quitar fuente" style="padding: 4px;">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                 </div>

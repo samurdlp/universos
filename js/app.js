@@ -57,6 +57,9 @@ function initApp() {
     if (activeTopicId) {
         renderTopicExercises();
     }
+    if (typeof checkUrlCloudMagicConfig === 'function') {
+        checkUrlCloudMagicConfig();
+    }
 }
 
 window.addEventListener('DOMContentLoaded', () => {

@@ -8,7 +8,6 @@ html {
     height: 100%;
     width: 100%;
     overflow-x: hidden;
-    /* Elimina el retraso de 300ms en pantallas táctiles y el zoom accidental que exige doble toque */
     touch-action: manipulation;
     -webkit-text-size-adjust: 100%;
 }
@@ -25,10 +24,41 @@ body {
     overflow: hidden;
     overflow-x: hidden;
     touch-action: manipulation;
-    transition: background-color 0.2s, color 0.2s; 
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s var(--ease-out-strong), color 0.2s var(--ease-out-strong); 
 }
 
-/* Barras de deslizamiento oscuras y elegantes integradas con el tema (Cero barras blancas) */
+/* Garantizar que todos los botones, selectores e inputs usen la tipografía principal elegante */
+button, input, select, textarea {
+    font-family: var(--font-main);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Micro-interacción táctil universal en botones (Emil Kowalski) */
+button:not(:disabled),
+.btn:not(:disabled),
+.btn-icon:not(:disabled),
+.top-nav-btn:not(:disabled),
+.top-nav-search-btn:not(:disabled),
+.filter-pill:not(:disabled),
+.mastery-pill:not(:disabled),
+.mode-pill-btn:not(:disabled) {
+    transition: transform 150ms var(--ease-out-strong), background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+}
+
+button:not(:disabled):active,
+.btn:not(:disabled):active,
+.btn-icon:not(:disabled):active,
+.top-nav-btn:not(:disabled):active,
+.top-nav-search-btn:not(:disabled):active,
+.filter-pill:not(:disabled):active,
+.mastery-pill:not(:disabled):active,
+.mode-pill-btn:not(:disabled):active {
+    transform: scale(0.96);
+}
+
+/* Barras de deslizamiento oscuras y elegantes integradas con el tema */
 * {
     scrollbar-width: thin;
     scrollbar-color: var(--border-subtle) transparent;
@@ -60,7 +90,7 @@ body {
     display: flex;
     flex-direction: column;
     z-index: 20; 
-    transition: margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: margin-left 0.26s var(--ease-spring), transform 0.26s var(--ease-spring);
 }
 
 /* En ordenador, permite replegar la barra lateral completamente */
@@ -68,16 +98,21 @@ body {
     margin-left: -340px;
 }
 
-/* Botón universal para alternar la barra lateral (visible en PC y móvil) */
+/* Botón de alternancia de barra lateral en barra superior y cabecera lateral */
 .sidebar-toggle-btn {
     display: inline-flex;
-    margin-right: 8px;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
     flex-shrink: 0;
     cursor: pointer;
 }
 
-.mobile-close-sidebar-btn {
-    display: none;
+.sidebar-panel-collapse-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
 }
 
 .sidebar-backdrop {
@@ -88,7 +123,7 @@ body {
     backdrop-filter: blur(3px);
     z-index: 95;
     opacity: 0;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.25s var(--ease-out-strong);
     pointer-events: none;
 }
 
@@ -125,17 +160,13 @@ body {
         transform: translateX(-100%);
         margin-left: 0 !important;
         visibility: hidden;
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
+        transition: transform 0.26s var(--ease-spring), visibility 0.26s;
     }
 
     .sidebar.mobile-open {
         transform: translateX(0);
         visibility: visible;
-        box-shadow: 10px 0 30px rgba(0,0,0,0.4) !important;
-    }
-
-    .mobile-close-sidebar-btn {
-        display: inline-flex;
+        box-shadow: 12px 0 36px rgba(0,0,0,0.45) !important;
     }
 
     /* El contenido principal ocupa siempre el 100% de la pantalla */
@@ -401,7 +432,6 @@ body {
     cursor: pointer;
     padding: 6px 10px;
     border-radius: 6px;
-    transition: all 0.15s;
 }
 .footer-btn:hover {
     background: var(--border-subtle);
@@ -429,7 +459,6 @@ body {
     align-items: center;
     justify-content: center; 
     cursor: pointer;
-    transition: all 0.2s; 
 }
 
 .btn-icon:hover {
@@ -449,6 +478,7 @@ body {
 /* Área Principal con Barra Superior */
 .content-area {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -459,7 +489,7 @@ body {
 /* Barra Superior Fija (Top Nav) */
 .top-nav {
     height: 56px;
-    padding: 0 32px;
+    padding: 0 28px;
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
     justify-content: space-between;
@@ -505,8 +535,7 @@ body {
     border-radius: 8px;
     cursor: pointer;
     font-size: 0.82rem;
-    font-weight: 500;
-    transition: all 0.15s;
+    font-weight: 600;
 }
 .top-nav-search-btn:hover {
     border-color: var(--primary);
@@ -533,16 +562,16 @@ body {
     cursor: pointer;
     font-size: 0.82rem;
     font-weight: 600;
-    transition: all 0.15s;
 }
 .top-nav-btn:hover {
     background: var(--border-subtle);
     color: var(--text-heading);
 }
 .top-nav-btn.active {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: var(--c-trampa);
-    color: var(--c-trampa);
+    background: rgba(59, 130, 246, 0.14);
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25);
 }
 
 /* Contenedor con Scroll para el Contenido */
@@ -556,13 +585,41 @@ body {
 }
 
 .content-wrapper {
-    max-width: 1200px;
+    max-width: 1160px;
     width: 100%;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 28px;
     padding-bottom: 60px;
+}
+
+/* Animación de entrada escalonada en contenido (Staggered Entrance) */
+@keyframes fadeUpStagger {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.content-wrapper > * {
+    animation: fadeUpStagger 260ms var(--ease-out-strong) both;
+}
+.content-wrapper > *:nth-child(1) { animation-delay: 0ms; }
+.content-wrapper > *:nth-child(2) { animation-delay: 35ms; }
+.content-wrapper > *:nth-child(3) { animation-delay: 70ms; }
+.content-wrapper > *:nth-child(4) { animation-delay: 105ms; }
+.content-wrapper > *:nth-child(5) { animation-delay: 140ms; }
+.content-wrapper > *:nth-child(6) { animation-delay: 175ms; }
+
+@media (prefers-reduced-motion: reduce) {
+    .content-wrapper > * {
+        animation: none !important;
+    }
 }
 
 mjx-container {
@@ -577,7 +634,7 @@ mjx-container {
 
 mjx-container[display="true"] {
     display: block !important;
-    margin: 1em 0 !important;
+    margin: 0.9em 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: auto !important;
@@ -612,11 +669,11 @@ mjx-container::-webkit-scrollbar-thumb {
 }
 
 .main-title {
-    font-size: 2rem;
+    font-size: 1.85rem;
     font-weight: 800;
     color: var(--text-heading);
-    margin-bottom: 8px;
-    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+    letter-spacing: -0.025em;
 }
 
 .empty-state {
@@ -643,75 +700,61 @@ mjx-container::-webkit-scrollbar-thumb {
 
 .empty-state p {
     font-size: 0.9rem;
-    max-width: 300px;
+    max-width: 320px;
+    line-height: 1.5;
 }
 
-/* Reglas de Exportación e Impresión Limpia (Chuleta / PDF) */
+/* Reglas de Impresión de Alta Densidad (Modo Chuleta Profesional) */
 @media print {
-    body {
+    @page {
+        size: A4 portrait;
+        margin: 7mm;
+    }
+
+    html, body {
         height: auto !important;
         overflow: visible !important;
         background: #ffffff !important;
-        color: #111827 !important;
-    }
-    .sidebar, 
-    .top-nav,
-    .sidebar-footer,
-    .controls-group, 
-    .modal-overlay, 
-    .add-exercise-btn, 
-    .card-actions, 
-    .mastery-filter-bar, 
-    .mastery-selector,
-    .print-action-btn,
-    .exam-banner,
-    .exam-reveal-card,
-    .exam-eval-bar {
-        display: none !important;
-    }
-    .content-area {
-        padding: 0 !important;
-        overflow: visible !important;
-        background: transparent !important;
-    }
-    .content-wrapper {
-        max-width: 100% !important;
-        padding-bottom: 0 !important;
-        gap: 20px !important;
-    }
-    /* Forzar apertura de todos los acordeones, pasos y listas para imprimir la chuleta completa */
-    .step-content, 
-    .accordion-content, 
-    .checklist-body {
-        display: block !important;
-        grid-template-rows: none !important;
-        padding: 12px 18px !important;
-        opacity: 1 !important;
-    }
-    .step-content-inner, 
-    .accordion-content-inner, 
-    .checklist-body-inner {
-        opacity: 1 !important;
-        overflow: visible !important;
-    }
-    .step-header .chevron, 
-    .accordion-header span:last-child, 
-    .checklist-header .chevron {
-        display: none !important;
-    }
-    .section-card, 
-    .step-block, 
-    .accordion-item, 
-    .checklist-box, 
-    .example-box {
-        break-inside: avoid !important;
-        page-break-inside: avoid !important;
-        box-shadow: none !important;
-        border-color: #d1d5db !important;
-    }
-    .example-box {
-        background: #f8fafc !important;
         color: #0f172a !important;
-        border: 1px solid #cbd5e1 !important;
+        font-size: 8.5pt !important;
+    }
+
+    /* Si está abierto el Generador de Chuleta, imprimir EXCLUSIVAMENTE la chuleta compacta */
+    body.printing-cheatsheet .sidebar,
+    body.printing-cheatsheet .content-area,
+    body.printing-cheatsheet .modal-overlay:not(#cheatsheetModal),
+    body.printing-cheatsheet .cheatsheet-toolbar,
+    body.printing-cheatsheet .cheatsheet-modal-header,
+    body.printing-cheatsheet .cheatsheet-modal-footer {
+        display: none !important;
+    }
+
+    body.printing-cheatsheet #cheatsheetModal {
+        position: static !important;
+        display: block !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        backdrop-filter: none !important;
+    }
+
+    body.printing-cheatsheet #cheatsheetModal .modal {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        overflow: visible !important;
+    }
+
+    body.printing-cheatsheet .cheatsheet-preview-scroll {
+        max-height: none !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        border: none !important;
+        background: #ffffff !important;
     }
 }
