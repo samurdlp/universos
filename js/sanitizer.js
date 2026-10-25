@@ -75,6 +75,9 @@ function convertToMathJaxFormat(text) {
         res = res.replace(/(?<!\$)\b((?:E|Var|Cov)\[[^\]]+\])(?![\w\$])/g, '$$$1$$');
         res = res.replace(/(?<!\$)\b(Cov\([^)]+\))(?![\w\$])/g, '$$$1$$');
 
+        // 7. Detectar expresiones matemáticas comunes como v_0, x_n, a_k, T(n), O(n log n), dist[v]
+        res = res.replace(/(?<![\w\\$])([a-zA-Z]_\d+)(?![\w\$])/g, '$$$1$$');
+
         return res;
     }).join('');
 }

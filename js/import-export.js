@@ -14,10 +14,21 @@
 
 let pendingImportState = null;
 
+function cleanProblematicJsonCharacters(input) {
+    if (!input || typeof input !== 'string') return '';
+    let text = input;
+    // 1. Limpiar caracteres invisibles y espacios raros de procesadores de texto
+    text = text.replace(/[\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]/g, ' ');
+    // 2. Normalizar comillas tipográficas / curvas (“ ” „ « ») a comillas estándar (")
+    text = text.replace(/[\u201C\u201D\u201E\u00AB\u00BB]/g, '"');
+    // 3. Normalizar apóstrofes o comillas simples curvas (‘ ’ ‚ ‹ ›) a comillas simples rectas (')
+    text = text.replace(/[\u2018\u2019\u201A\u2039\u203A]/g, "'");
+    return text;
+}
+
 function fixJsonLatex(jsonStr) {
     if (!jsonStr) return '';
-    // 1. Limpiar espacios unicode invisibles
-    let text = jsonStr.replace(/[\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]/g, ' ');
+    let text = cleanProblematicJsonCharacters(jsonStr);
 
     let result = '';
     let inString = false;
@@ -157,13 +168,21 @@ function autoBalanceTruncatedJson(jsonStr) {
     return text;
 }
 
+function clearJsonInput() {
+    const textarea = document.getElementById('json-textarea');
+    if (textarea) {
+        textarea.value = '';
+        textarea.focus();
+    }
+}
+
 function parseResilientJson(rawInput) {
     const syntaxWarnings = [];
     if (!rawInput || !rawInput.trim()) {
         throw new Error('El cuadro de texto está vacío. Pega un código JSON o arrastra un archivo.');
     }
 
-    let text = rawInput.trim();
+    let text = cleanProblematicJsonCharacters(rawInput.trim());
 
     // Eliminar bloques markdown ```json ... ```
     text = text.replace(/^```(?:json|javascript|js)?\s*/i, '').replace(/\s*```$/i, '').trim();

@@ -10,13 +10,23 @@
 
 let isMathJaxTypesetting = false;
 let pendingMathJaxTypeset = false;
+let mathDebounceTimer = null;
 
 function forceMathRender(elements) {
     if (!window.MathJax || !MathJax.typesetPromise) {
-        // MathJax aún está descargándose desde el CDN; se ejecutará automáticamente en startup.ready
         return;
     }
 
+    if (mathDebounceTimer) {
+        clearTimeout(mathDebounceTimer);
+    }
+
+    mathDebounceTimer = setTimeout(() => {
+        executeMathRender(elements);
+    }, 40);
+}
+
+function executeMathRender(elements) {
     if (isMathJaxTypesetting) {
         pendingMathJaxTypeset = true;
         return;
@@ -24,10 +34,8 @@ function forceMathRender(elements) {
 
     isMathJaxTypesetting = true;
 
-    // Detectar contenedores con contenido matemático
     const defaultTargets = [
         document.getElementById('exercise-content'),
-        document.getElementById('exercise-list'),
         document.getElementById('subject-text'),
         document.getElementById('topic-text')
     ].filter(Boolean);
@@ -46,7 +54,7 @@ function forceMathRender(elements) {
                 isMathJaxTypesetting = false;
                 if (pendingMathJaxTypeset) {
                     pendingMathJaxTypeset = false;
-                    forceMathRender();
+                    executeMathRender();
                 }
             });
     } catch (e) {

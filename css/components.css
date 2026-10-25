@@ -320,7 +320,7 @@ body:not(.dark) .theory-card .theory-icon-badge {
     gap: 8px;
 }
 .section-title svg {
-    color: var(--primary);
+    color: var(--text-muted) !important;
     flex-shrink: 0;
 }
 
@@ -864,16 +864,27 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
     align-items: center;
     gap: 4px;
     text-align: center;
+    color: var(--text-heading);
 }
 .exam-grade-btn strong {
     font-size: 0.88rem;
     display: flex;
     align-items: center;
     gap: 6px;
+    color: var(--text-heading);
 }
 .exam-grade-btn span {
     font-size: 0.75rem;
     color: var(--text-muted);
+}
+.exam-grade-btn.grade-doubt strong {
+    color: #ef4444;
+}
+.exam-grade-btn.grade-review strong {
+    color: #f59e0b;
+}
+.exam-grade-btn.grade-mastered strong {
+    color: #10b981;
 }
 .exam-grade-btn.grade-doubt:hover, .exam-grade-btn.grade-doubt.selected {
     border-color: #ef4444;
@@ -904,7 +915,42 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
     background: var(--bg-body);
     border: 1px solid var(--border-subtle);
     border-radius: 9px;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
+}
+
+.cheatsheet-item-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    align-items: center;
+}
+.cs-select-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-body);
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-body);
+    transition: all 160ms ease;
+}
+.cs-select-pill:hover {
+    border-color: var(--primary);
+}
+.cs-select-pill.active {
+    background: var(--primary-bg);
+    border-color: var(--primary);
+    color: var(--primary);
 }
 
 .cheatsheet-toggles {
@@ -947,6 +993,20 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
     font-family: var(--font-main);
     font-size: 0.74rem;
     line-height: 1.38;
+}
+
+/* Evitar desbordes de fórmulas en la chuleta y escalado adaptativo */
+.cheatsheet-sheet mjx-container {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    font-size: 88% !important;
+}
+.cheatsheet-sheet mjx-container[jax="CHTML"][display="true"] {
+    margin: 3px 0 !important;
+    overflow-x: hidden !important;
+}
+.cheatsheet-sheet mjx-math {
+    white-space: normal !important;
 }
 
 .cheatsheet-sheet.cols-2 {

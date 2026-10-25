@@ -14,7 +14,8 @@ function toggleClass(element) {
     if (!parent) return;
     parent.classList.toggle('open');
     if (parent.classList.contains('open') && typeof forceMathRender === 'function') {
-        forceMathRender([parent]);
+        const contentInner = parent.querySelector('.accordion-content-inner, .step-content-inner');
+        forceMathRender([contentInner || parent]);
     }
 }
 
@@ -23,7 +24,8 @@ function toggleChecklistExpand(headerEl) {
     if (!wrapper) return;
     wrapper.classList.toggle('expanded');
     if (wrapper.classList.contains('expanded') && typeof forceMathRender === 'function') {
-        forceMathRender([wrapper]);
+        const bodyInner = wrapper.querySelector('.checklist-body-inner');
+        forceMathRender([bodyInner || wrapper]);
     }
 }
 

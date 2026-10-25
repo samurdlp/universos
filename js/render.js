@@ -200,8 +200,14 @@ function renderTopicExercises() {
 
     // Tarjeta de Teoría (sutilmente diferenciada pero sin parecer seleccionada cuando no lo está)
     if (topic.data.teoria && currentMasteryFilter === 'all') {
+        const theoryMastery = topic.data.teoria.mastery || 'none';
+        let theoryMasteryClass = '';
+        if (theoryMastery === 'mastered') theoryMasteryClass = 'mastery-mastered';
+        else if (theoryMastery === 'review') theoryMasteryClass = 'mastery-review';
+        else if (theoryMastery === 'doubt') theoryMasteryClass = 'mastery-doubt';
+
         exList.innerHTML += `
-            <div class="exercise-card theory-card" id="card-theory" onclick="selectTheory()">
+            <div class="exercise-card theory-card ${theoryMasteryClass}" id="card-theory" onclick="selectTheory()">
                 <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
                     <div class="theory-icon-badge">${icons.bookOpen}</div>
                     <div class="card-info">
@@ -285,8 +291,27 @@ function selectTheory() {
     const data = topic && topic.data ? topic.data.teoria : null;
     if (!data) return;
     
+    const currentTheoryMastery = (data && data.mastery) || 'none';
+
     let html = `<div class="exercise-header-top">
         <h1 class="main-title">${sanitizeHTML(data.title) || 'Conceptos Teóricos'}</h1>
+        <div class="header-action-pills">
+            <div class="mastery-selector">
+                <span class="mastery-selector-label">Nivel</span>
+                <button class="mastery-pill ${currentTheoryMastery === 'mastered' ? 'active-mastered' : ''}" onclick="setTheoryMasteryStatus('mastered')" title="Marcar como Perfecto (Verde)">
+                    ${icons.checkCircle}
+                    <span>Perfecto</span>
+                </button>
+                <button class="mastery-pill ${currentTheoryMastery === 'review' ? 'active-review' : ''}" onclick="setTheoryMasteryStatus('review')" title="Marcar como Regular (Ámbar)">
+                    ${icons.clock}
+                    <span>Regular</span>
+                </button>
+                <button class="mastery-pill ${currentTheoryMastery === 'doubt' ? 'active-doubt' : ''}" onclick="setTheoryMasteryStatus('doubt')" title="Marcar como Mal (Rojo)">
+                    ${icons.helpCircle}
+                    <span>Mal</span>
+                </button>
+            </div>
+        </div>
     </div>`;
     html += `<div class="theory-content">`;
     
@@ -345,17 +370,16 @@ function selectTheory() {
         data.checklistClave.forEach((item, itemIdx) => {
             let title = '', subtitle = '';
             if (typeof item === 'string') {
-                // Dividir ANTES de procesar LaTeX para jamás partir por la mitad un $...$ o $$...$$
                 const parts = splitChecklistStringSafely(item);
-                title = processTextWithCitations(parts.title).text;
+                title = sanitizeHTML(parts.title);
                 subtitle = parts.subtitle
-                    ? processTextWithCitations(parts.subtitle).text
+                    ? sanitizeHTML(parts.subtitle)
                     : 'Concepto fundamental verificado para la resolución de problemas de examen.';
             } else if (item && typeof item === 'object') {
                 const rawT = item.title || item.titulo || item.concepto || item.nombre || item.pregunta || `Concepto ${itemIdx + 1}`;
                 const rawS = item.subtitle || item.subtitulo || item.descripcion || item.content || item.contenido || item.explicacion || item.detalle || item.respuesta || '';
-                title = processTextWithCitations(rawT).text;
-                subtitle = rawS ? processTextWithCitations(rawS).text : title;
+                title = sanitizeHTML(rawT);
+                subtitle = rawS ? sanitizeHTML(rawS) : title;
             }
 
             const isChecked = savedChecked.includes(itemIdx) ? 'checked' : '';
@@ -406,6 +430,22 @@ function toggleChecklistItem(index) {
     }
 }
 
+function setTheoryMasteryStatus(status) {
+    const subject = appDB.subjects.find(s => s.id === activeSubjectId);
+    const topic = subject ? subject.topics.find(t => t.id === activeTopicId) : null;
+    if (!topic || !topic.data || !topic.data.teoria) return;
+
+    if (topic.data.teoria.mastery === status) {
+        topic.data.teoria.mastery = 'none';
+    } else {
+        topic.data.teoria.mastery = status;
+    }
+
+    saveDB();
+    renderTopicExercises();
+    selectTheory();
+}
+
 function setMasteryStatus(index, status) {
     const subject = appDB.subjects.find(s => s.id === activeSubjectId);
     const topic = subject ? subject.topics.find(t => t.id === activeTopicId) : null;
@@ -450,25 +490,25 @@ function selectExercise(index) {
 
     if (!data) return;
 
-    const currentMastery = data.mastery || 'none';
+    const currentMastery = (data && data.mastery) || 'none';
 
     let html = `
         <div class="exercise-header-top">
             <h1 class="main-title">${sanitizeHTML(data.title)}</h1>
             <div class="header-action-pills">
                 <div class="mastery-selector">
-                    <span class="mastery-selector-label">Dominio</span>
-                    <button class="mastery-pill ${currentMastery === 'mastered' ? 'active-mastered' : ''}" onclick="setMasteryStatus(${index}, 'mastered')" title="Marcar o desmarcar como Dominado">
+                    <span class="mastery-selector-label">Nivel</span>
+                    <button class="mastery-pill ${currentMastery === 'mastered' ? 'active-mastered' : ''}" onclick="setMasteryStatus(${index}, 'mastered')" title="Marcar como Perfecto (Verde)">
                         ${icons.checkCircle}
-                        <span>Dominado</span>
+                        <span>Perfecto</span>
                     </button>
-                    <button class="mastery-pill ${currentMastery === 'review' ? 'active-review' : ''}" onclick="setMasteryStatus(${index}, 'review')" title="Marcar o desmarcar para Repasar">
+                    <button class="mastery-pill ${currentMastery === 'review' ? 'active-review' : ''}" onclick="setMasteryStatus(${index}, 'review')" title="Marcar como Regular (Ámbar)">
                         ${icons.clock}
-                        <span>Repasar</span>
+                        <span>Regular</span>
                     </button>
-                    <button class="mastery-pill ${currentMastery === 'doubt' ? 'active-doubt' : ''}" onclick="setMasteryStatus(${index}, 'doubt')" title="Marcar o desmarcar como Duda">
+                    <button class="mastery-pill ${currentMastery === 'doubt' ? 'active-doubt' : ''}" onclick="setMasteryStatus(${index}, 'doubt')" title="Marcar como Mal (Rojo)">
                         ${icons.helpCircle}
-                        <span>Duda</span>
+                        <span>Mal</span>
                     </button>
                 </div>
             </div>
@@ -506,16 +546,16 @@ function selectExercise(index) {
     }
 
     if (data.variaciones && data.variaciones.length > 0) {
-        html += `<div class="section-card"><div class="section-title" style="color:var(--c-var)">${icons.gitBranch}<span>Variaciones de Examen</span></div>${buildAccordions(data.variaciones, 'acc-variaciones')}</div>`;
+        html += `<div class="section-card"><div class="section-title">${icons.gitBranch}<span>Variaciones de Examen</span></div>${buildAccordions(data.variaciones, 'acc-variaciones')}</div>`;
     }
     if (data.trucos && data.trucos.length > 0) {
-        html += `<div class="section-card"><div class="section-title" style="color:var(--c-truco)">${icons.zap}<span>Trucos y Atajos</span></div>${buildAccordions(data.trucos, 'acc-trucos')}</div>`;
+        html += `<div class="section-card"><div class="section-title">${icons.zap}<span>Trucos y Atajos</span></div>${buildAccordions(data.trucos, 'acc-trucos')}</div>`;
     }
     if (data.errores && data.errores.length > 0) {
-        html += `<div class="section-card"><div class="section-title" style="color:var(--c-error)">${icons.xCircle}<span>Errores Comunes</span></div>${buildAccordions(data.errores, 'acc-errores')}</div>`;
+        html += `<div class="section-card"><div class="section-title">${icons.xCircle}<span>Errores Comunes</span></div>${buildAccordions(data.errores, 'acc-errores')}</div>`;
     }
     if (data.trampas && data.trampas.length > 0) {
-        html += `<div class="section-card"><div class="section-title" style="color:var(--c-trampa)">${icons.alertTriangle}<span>Trampas de Examen</span></div>${buildAccordions(data.trampas, 'acc-trampas')}</div>`;
+        html += `<div class="section-card"><div class="section-title">${icons.alertTriangle}<span>Trampas de Examen</span></div>${buildAccordions(data.trampas, 'acc-trampas')}</div>`;
     }
     if (data.ejerciciosPropuestos && data.ejerciciosPropuestos.length > 0) {
         html += `<div class="section-card"><div class="section-title">${icons.bookOpen}<span>Ejercicios Propuestos de Examen</span></div>${buildPropuestos(data.ejerciciosPropuestos)}</div>`;
@@ -1113,13 +1153,96 @@ function renderExamSimulator() {
    GENERADOR DE CHULETA DE ALTA DENSIDAD (MULTI-COLUMNA Y AHORRO DE PÁGINAS)
    ========================================================================== */
 
+let cheatsheetSelectedExercises = null;
+let cheatsheetIncludeTheoryCard = true;
+
 function openCheatsheetModal() {
     if (!activeSubjectId || !activeTopicId) {
         customAlert('Selecciona primero una Asignatura y un Tema para generar su chuleta compacta.', 'Selecciona un Tema');
         return;
     }
+    const subject = appDB.subjects.find(s => s.id === activeSubjectId);
+    const topic = subject ? subject.topics.find(t => t.id === activeTopicId) : null;
+    if (!topic || !topic.data) {
+        customAlert('Este tema aún no tiene contenido cargado.', 'Tema Vacío');
+        return;
+    }
+
+    const totalEx = (topic.data.ejercicios || []).length;
+    cheatsheetSelectedExercises = new Set(Array.from({ length: totalEx }, (_, i) => i));
+    cheatsheetIncludeTheoryCard = true;
+
+    renderCheatsheetSelectorBar(topic);
     renderCheatsheetPreview();
     openModal('cheatsheetModal');
+}
+
+function renderCheatsheetSelectorBar(topic) {
+    const selectorContainer = document.getElementById('cheatsheetItemSelector');
+    if (!selectorContainer) return;
+
+    const ejercicios = topic.data.ejercicios || [];
+    let html = `
+        <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-right:4px;">Incluir:</span>
+        <button type="button" class="cs-select-pill ${cheatsheetIncludeTheoryCard ? 'active' : ''}" onclick="toggleCheatsheetTheorySelect()">
+            <span>Teoría</span>
+        </button>
+    `;
+
+    ejercicios.forEach((ex, idx) => {
+        const isSel = cheatsheetSelectedExercises.has(idx);
+        html += `
+            <button type="button" class="cs-select-pill ${isSel ? 'active' : ''}" onclick="toggleCheatsheetExSelect(${idx})" title="${sanitizeHTML(ex.title)}">
+                <span>Ej. ${idx + 1}</span>
+            </button>
+        `;
+    });
+
+    html += `
+        <div style="margin-left:auto; display:flex; gap:6px;">
+            <button type="button" class="btn btn-secondary" style="font-size:0.7rem; padding:3px 7px;" onclick="setAllCheatsheetExercises(true)">Todos</button>
+            <button type="button" class="btn btn-secondary" style="font-size:0.7rem; padding:3px 7px;" onclick="setAllCheatsheetExercises(false)">Ninguno</button>
+        </div>
+    `;
+
+    selectorContainer.innerHTML = html;
+}
+
+function toggleCheatsheetTheorySelect() {
+    cheatsheetIncludeTheoryCard = !cheatsheetIncludeTheoryCard;
+    const subject = appDB.subjects.find(s => s.id === activeSubjectId);
+    const topic = subject ? subject.topics.find(t => t.id === activeTopicId) : null;
+    if (topic) renderCheatsheetSelectorBar(topic);
+    renderCheatsheetPreview();
+}
+
+function toggleCheatsheetExSelect(idx) {
+    if (!cheatsheetSelectedExercises) cheatsheetSelectedExercises = new Set();
+    if (cheatsheetSelectedExercises.has(idx)) {
+        cheatsheetSelectedExercises.delete(idx);
+    } else {
+        cheatsheetSelectedExercises.add(idx);
+    }
+    const subject = appDB.subjects.find(s => s.id === activeSubjectId);
+    const topic = subject ? subject.topics.find(t => t.id === activeTopicId) : null;
+    if (topic) renderCheatsheetSelectorBar(topic);
+    renderCheatsheetPreview();
+}
+
+function setAllCheatsheetExercises(select) {
+    const subject = appDB.subjects.find(s => s.id === activeSubjectId);
+    const topic = subject ? subject.topics.find(t => t.id === activeTopicId) : null;
+    if (!topic) return;
+    const totalEx = (topic.data.ejercicios || []).length;
+    if (select) {
+        cheatsheetSelectedExercises = new Set(Array.from({ length: totalEx }, (_, i) => i));
+        cheatsheetIncludeTheoryCard = true;
+    } else {
+        cheatsheetSelectedExercises = new Set();
+        cheatsheetIncludeTheoryCard = false;
+    }
+    renderCheatsheetSelectorBar(topic);
+    renderCheatsheetPreview();
 }
 
 function renderCheatsheetPreview() {
@@ -1133,8 +1256,8 @@ function renderCheatsheetPreview() {
         return;
     }
 
-    const incTheory = document.getElementById('csIncTheory') ? document.getElementById('csIncTheory').checked : true;
-    const incChecklist = document.getElementById('csIncChecklist') ? document.getElementById('csIncChecklist').checked : true;
+    const incTheory = (document.getElementById('csIncTheory') ? document.getElementById('csIncTheory').checked : true) && cheatsheetIncludeTheoryCard;
+    const incChecklist = (document.getElementById('csIncChecklist') ? document.getElementById('csIncChecklist').checked : true) && cheatsheetIncludeTheoryCard;
     const incIdent = document.getElementById('csIncIdent') ? document.getElementById('csIncIdent').checked : true;
     const incSteps = document.getElementById('csIncSteps') ? document.getElementById('csIncSteps').checked : true;
     const incTricks = document.getElementById('csIncTricks') ? document.getElementById('csIncTricks').checked : true;
@@ -1142,7 +1265,8 @@ function renderCheatsheetPreview() {
     const cols = document.getElementById('csColsSelect') ? document.getElementById('csColsSelect').value : '3';
 
     const teo = topic.data.teoria;
-    const ejercicios = topic.data.ejercicios || [];
+    const allEjercicios = topic.data.ejercicios || [];
+    const ejercicios = allEjercicios.filter((_, idx) => cheatsheetSelectedExercises ? cheatsheetSelectedExercises.has(idx) : true);
 
     let html = `
         <div class="cheatsheet-sheet cols-${cols}" id="cheatsheet-print-area">
