@@ -733,12 +733,29 @@ mjx-container::-webkit-scrollbar-thumb {
         font-size: 8.5pt !important;
     }
 
+    /* Ocultar elementos de navegación, barras de filtros y botones interactivos en cualquier impresión */
+    .sidebar,
+    .top-nav,
+    .mastery-filter-bar,
+    .exam-sim-bar,
+    .card-actions,
+    .act-btn,
+    .add-new-btn,
+    .sidebar-footer,
+    .cheatsheet-item-selector,
+    #cheatsheetItemSelector,
+    .modal-overlay:not(#cheatsheetModal) {
+        display: none !important;
+    }
+
     /* Si está abierto el Generador de Chuleta, imprimir EXCLUSIVAMENTE la chuleta compacta */
     body.printing-cheatsheet .sidebar,
     body.printing-cheatsheet .content-area,
     body.printing-cheatsheet .modal-overlay:not(#cheatsheetModal),
     body.printing-cheatsheet .cheatsheet-toolbar,
     body.printing-cheatsheet .cheatsheet-modal-header,
+    body.printing-cheatsheet .cheatsheet-item-selector,
+    body.printing-cheatsheet #cheatsheetItemSelector,
     body.printing-cheatsheet .cheatsheet-modal-footer {
         display: none !important;
     }

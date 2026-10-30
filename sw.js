@@ -1,9 +1,9 @@
 /**
  * UniverSOS — Service Worker Offline-First (PWA Cache Engine)
- * Versión: universos-v2.6-offline
+ * Versión: universos-v2.7-offline
  */
 
-const CACHE_NAME = 'universos-v2.6-offline';
+const CACHE_NAME = 'universos-v2.7-offline';
 
 const PRECACHE_ASSETS = [
     './',

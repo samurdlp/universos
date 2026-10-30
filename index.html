@@ -122,7 +122,7 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
                 <span>Base de Datos</span>
             </button>
-            <span class="footer-tag">v2.6.1</span>
+            <span class="footer-tag">v2.7</span>
         </div>
     </aside>
 
@@ -578,14 +578,22 @@ create policy "Acceso universos" on universos_sync for all using (true);</pre>
         </div>
     </div>
 
-    <!-- Modal Flashcards SRS (Repaso Espaciado Activo) -->
+    <!-- Modal Flashcards SRS (Repaso Espaciado Activo y Registro Autónomo) -->
     <div class="modal-overlay" id="flashcardsModal" role="dialog" aria-modal="true" aria-labelledby="flashcardsModalTitle">
         <div class="modal flashcards-modal-box">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h2 id="flashcardsModalTitle" style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                    <span>Repaso Flashcards SRS</span>
-                </h2>
+            <!-- Pestañas de Navegación del Modal -->
+            <div class="fc-header-tabs">
+                <div class="fc-tab-group">
+                    <button class="fc-tab-btn active" id="fcTabReviewBtn" onclick="switchFlashcardTab('review')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                        <span>Repaso Activo</span>
+                    </button>
+                    <button class="fc-tab-btn" id="fcTabLedgerBtn" onclick="switchFlashcardTab('ledger')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                        <span>Registro de Retención</span>
+                        <span class="fc-badge-count" id="fcLedgerFailedBadge" style="display:none;">0</span>
+                    </button>
+                </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span id="flashcard-counter" style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">0 / 0</span>
                     <button class="btn-icon" onclick="closeModal('flashcardsModal')" title="Cerrar Flashcards" aria-label="Cerrar modal de flashcards">
@@ -594,43 +602,120 @@ create policy "Acceso universos" on universos_sync for all using (true);</pre>
                 </div>
             </div>
 
-            <!-- Contenedor de la Tarjeta Giratoria -->
-            <div class="flashcard-wrapper" id="flashcardWrapper" onclick="flipFlashcard()">
-                <div class="flashcard-inner" id="flashcardInner">
-                    <!-- Frente (Pregunta / Concepto / Identificación) -->
-                    <div class="flashcard-face flashcard-face-front">
-                        <span class="flashcard-type-tag" id="fc-type-front">Concepto Clave</span>
-                        <div class="flashcard-content-center" id="fc-front-text">Cargando flashcards...</div>
-                        <div class="flashcard-flip-hint">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-                            <span>Haz clic o presiona Espacio para voltear</span>
+            <!-- VISTA 1: SESIÓN DE REPASO ACTIVO -->
+            <div id="fcViewReview">
+                <!-- Barra de Configuración de Sesión (Cantidad y Dificultad) -->
+                <div class="fc-session-bar">
+                    <div class="fc-bar-group">
+                        <span class="fc-bar-label">Cantidad:</span>
+                        <div class="fc-chip-group">
+                            <button class="fc-chip" data-limit="5" onclick="setFlashcardLimit(5, this)">5</button>
+                            <button class="fc-chip" data-limit="10" onclick="setFlashcardLimit(10, this)">10</button>
+                            <button class="fc-chip" data-limit="20" onclick="setFlashcardLimit(20, this)">20</button>
+                            <button class="fc-chip active" data-limit="all" onclick="setFlashcardLimit('all', this)">Todas</button>
                         </div>
                     </div>
-                    <!-- Reverso (Respuesta / Algoritmo / Solución) -->
-                    <div class="flashcard-face flashcard-face-back">
-                        <span class="flashcard-type-tag" id="fc-type-back" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">Respuesta / Algoritmo</span>
-                        <div class="flashcard-content-center" id="fc-back-text">...</div>
-                        <div class="flashcard-flip-hint">
-                            <span>Califica tu retención abajo para programar el próximo repaso</span>
+                    <div class="fc-bar-group">
+                        <span class="fc-bar-label">Dificultad:</span>
+                        <select id="fcDifficultySelect" class="fc-select" onchange="changeFlashcardFilter(this.value)">
+                            <option value="all">Todas las tarjetas</option>
+                            <option value="failed">Falladas / Por Reforzar (Mal/Regular)</option>
+                            <option value="unseen">Solo Pendientes</option>
+                            <option value="theory">Solo Conceptos Teóricos</option>
+                            <option value="exercises">Solo Algoritmos y Problemas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Contenedor de la Tarjeta Giratoria 3D -->
+                <div class="flashcard-wrapper" id="flashcardWrapper" onclick="flipFlashcard()">
+                    <div class="flashcard-inner" id="flashcardInner">
+                        <!-- Frente (Pregunta / Concepto / Identificación) -->
+                        <div class="flashcard-face flashcard-face-front">
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                <span class="fc-topic-crumb" id="fc-crumb-front">Tema</span>
+                                <span class="flashcard-type-tag" id="fc-type-front">Concepto Clave</span>
+                            </div>
+                            <div class="flashcard-content-center" id="fc-front-text">Cargando flashcards...</div>
+                            <div class="flashcard-flip-hint">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                                <span>Clic o Espacio para ver solución</span>
+                            </div>
+                        </div>
+                        <!-- Reverso (Respuesta / Algoritmo / Solución) -->
+                        <div class="flashcard-face flashcard-face-back">
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                <span class="fc-topic-crumb" id="fc-crumb-back" style="color: #10b981;">Resolución</span>
+                                <span class="flashcard-type-tag" id="fc-type-back" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">Respuesta / Algoritmo</span>
+                            </div>
+                            <div class="flashcard-content-center" id="fc-back-text">...</div>
+                            <div class="flashcard-flip-hint">
+                                <span>Califica tu retención abajo para alimentar tu registro automático</span>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Botones de Calificación SRS (Repetición Espaciada) -->
+                <div class="flashcard-rating-buttons">
+                    <button class="flashcard-rate-btn rate-hard" onclick="rateFlashcard('mal')" title="No me acordaba (Tecla 1)">
+                        <span style="font-weight: 800; color: #ef4444;">Mal</span>
+                        <span style="font-size: 0.7rem; opacity: 0.85;">Repetir pronto [1]</span>
+                    </button>
+                    <button class="flashcard-rate-btn rate-good" onclick="rateFlashcard('regular')" title="Dudoso o incompleto (Tecla 2)">
+                        <span style="font-weight: 800; color: #f59e0b;">Regular</span>
+                        <span style="font-size: 0.7rem; opacity: 0.85;">Reforzar [2]</span>
+                    </button>
+                    <button class="flashcard-rate-btn rate-easy" onclick="rateFlashcard('perfecto')" title="Dominado con soltura (Tecla 3)">
+                        <span style="font-weight: 800; color: #10b981;">Perfecto</span>
+                        <span style="font-size: 0.7rem; opacity: 0.85;">Dominado [3]</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- Botones de Calificación SRS (Repetición Espaciada) -->
-            <div class="flashcard-rating-buttons">
-                <button class="flashcard-rate-btn rate-hard" onclick="rateFlashcard('mal')" title="No me acordaba bien">
-                    <span style="font-weight: 800;">Mal</span>
-                    <span style="font-size: 0.7rem; opacity: 0.8;">Repetir pronto</span>
-                </button>
-                <button class="flashcard-rate-btn rate-good" onclick="rateFlashcard('regular')" title="Me ha costado o recordaba parte">
-                    <span style="font-weight: 800;">Regular</span>
-                    <span style="font-size: 0.7rem; opacity: 0.8;">Repasar luego</span>
-                </button>
-                <button class="flashcard-rate-btn rate-easy" onclick="rateFlashcard('perfecto')" title="Lo dominaba con soltura">
-                    <span style="font-weight: 800;">Perfecto</span>
-                    <span style="font-size: 0.7rem; opacity: 0.8;">Dominado</span>
-                </button>
+            <!-- VISTA 2: REGISTRO HISTÓRICO AUTÓNOMO DE RETENCIÓN -->
+            <div id="fcViewLedger" class="fc-ledger-container" style="display: none;">
+                <div class="fc-ledger-summary-grid">
+                    <div class="fc-stat-box box-mastered">
+                        <div class="fc-stat-val" id="fcCountMastered">0</div>
+                        <div class="fc-stat-lbl">Dominadas (Perfecto)</div>
+                    </div>
+                    <div class="fc-stat-box box-review">
+                        <div class="fc-stat-val" id="fcCountReview">0</div>
+                        <div class="fc-stat-lbl">Por Afianzar (Regular)</div>
+                    </div>
+                    <div class="fc-stat-box box-doubt">
+                        <div class="fc-stat-val" id="fcCountDoubt">0</div>
+                        <div class="fc-stat-lbl">Falladas / Duda (Mal)</div>
+                    </div>
+                    <div class="fc-stat-box box-unseen">
+                        <div class="fc-stat-val" id="fcCountUnseen">0</div>
+                        <div class="fc-stat-lbl">Sin Calificar</div>
+                    </div>
+                </div>
+
+                <div class="fc-ledger-actions">
+                    <button class="btn btn-primary" onclick="startFailedFlashcardsSession()" id="fcBtnReviewFailed">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                        <span>Repasar Solo Falladas / Dudosas</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetFlashcardLedger()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        <span>Reiniciar Registro</span>
+                    </button>
+                </div>
+
+                <div class="fc-ledger-list-header">
+                    <input type="text" id="fcLedgerSearch" class="text-input" placeholder="Buscar en el registro..." oninput="renderFlashcardLedgerList()" style="margin: 0; padding: 6px 10px; font-size: 0.8rem; max-width: 260px;">
+                    <div class="fc-ledger-filter-pills">
+                        <button class="filter-pill active" onclick="setLedgerStatusFilter('all', this)">Todas</button>
+                        <button class="filter-pill" onclick="setLedgerStatusFilter('doubt', this)">Mal</button>
+                        <button class="filter-pill" onclick="setLedgerStatusFilter('review', this)">Regular</button>
+                        <button class="filter-pill" onclick="setLedgerStatusFilter('mastered', this)">Perfecto</button>
+                    </div>
+                </div>
+
+                <div class="fc-ledger-list-scroll" id="fcLedgerList"></div>
             </div>
         </div>
     </div>

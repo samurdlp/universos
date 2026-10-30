@@ -1436,15 +1436,48 @@ function triggerCheatsheetPrint() {
 }
 
 /* ==========================================================================
-   MODO FLASHCARDS SRS (REPASO ESPACIADO ACTIVO DE ALTA GAMA)
+   MODO FLASHCARDS SRS (REPASO ESPACIADO ACTIVO Y REGISTRO AUTÓNOMO)
    ========================================================================== */
 
-let currentFlashcardDeck = [];
-let currentFlashcardIndex = 0;
+var fullFlashcardDeck = [];
+var currentFlashcardDeck = [];
+var currentFlashcardIndex = 0;
+var flashcardSessionLimit = 'all'; // 5, 10, 20, or 'all'
+var flashcardSessionFilter = 'all'; // 'all', 'failed', 'unseen', 'theory', 'exercises'
+var flashcardActiveTab = 'review'; // 'review' | 'ledger'
+var ledgerStatusFilter = 'all'; // 'all', 'doubt', 'review', 'mastered'
+
+function getFlashcardHistory() {
+    try {
+        const raw = localStorage.getItem('universos_flashcards_history');
+        return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+        console.warn('Error leyendo historial de flashcards:', e);
+        return {};
+    }
+}
+
+function saveFlashcardHistory(hist) {
+    try {
+        localStorage.setItem('universos_flashcards_history', JSON.stringify(hist));
+    } catch (e) {
+        console.warn('Error guardando historial de flashcards:', e);
+    }
+}
+
+function generateFlashcardId(card) {
+    const s = (card.subjectName || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const t = (card.topicName || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const type = (card.type || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const p = (card.frontRaw || card.title || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/<[^>]+>/g, '').slice(0, 45);
+    return `fc_${s}_${t}_${type}_${p}`.replace(/[\s\W]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+}
 
 function openFlashcardsModal() {
+    fullFlashcardDeck = [];
     currentFlashcardDeck = [];
     currentFlashcardIndex = 0;
+    flashcardActiveTab = 'review';
 
     const subjects = (appDB && Array.isArray(appDB.subjects)) ? appDB.subjects : [];
     if (subjects.length === 0) {
@@ -1457,20 +1490,25 @@ function openFlashcardsModal() {
         const s = subjects.find(sub => sub.id === activeSubjectId);
         if (s && s.topics) {
             const t = s.topics.find(top => top.id === activeTopicId);
-            if (t) targetTopics.push(t);
+            if (t) targetTopics.push({ topic: t, subject: s });
         }
     } else if (activeSubjectId) {
         const s = subjects.find(sub => sub.id === activeSubjectId);
-        if (s && s.topics) targetTopics = [...s.topics];
+        if (s && s.topics) {
+            s.topics.forEach(t => targetTopics.push({ topic: t, subject: s }));
+        }
     } else {
         subjects.forEach(s => {
-            if (Array.isArray(s.topics)) targetTopics.push(...s.topics);
+            if (Array.isArray(s.topics)) {
+                s.topics.forEach(t => targetTopics.push({ topic: t, subject: s }));
+            }
         });
     }
 
-    targetTopics.forEach(top => {
+    targetTopics.forEach(({ topic: top, subject: s }) => {
         if (!top.data) return;
         const topicName = top.name || 'Tema';
+        const subjectName = s.name || 'Asignatura';
 
         // 1. Conceptos Clave de la Teoría
         if (top.data.teoria && Array.isArray(top.data.teoria.checklistClave)) {
@@ -1478,12 +1516,19 @@ function openFlashcardsModal() {
                 const title = typeof item === 'string' ? item : (item.title || item.text || '');
                 const detail = typeof item === 'object' ? (item.explanation || item.detail || '') : '';
                 if (title) {
-                    currentFlashcardDeck.push({
+                    const card = {
+                        subjectName,
+                        topicName,
+                        title,
+                        frontRaw: title,
                         type: 'Concepto Clave',
                         typeBack: 'Explicación Teórica',
-                        front: `<strong>${sanitizeHTML(topicName)}</strong><br><br>${sanitizeHTML(title)}`,
-                        back: detail ? sanitizeHTML(detail) : 'Concepto teórico fundamental para el examen. Asegúrate de saber deducirlo o enunciarlo.'
-                    });
+                        category: 'theory',
+                        front: `<div style="font-size:0.95em; color:var(--text-heading); font-weight:700;">${sanitizeHTML(title)}</div>`,
+                        back: `<div style="line-height:1.45; font-size:0.92em;">${detail ? sanitizeHTML(detail) : 'Concepto teórico fundamental para el examen. Asegúrate de saber deducirlo o enunciarlo.'}</div>`
+                    };
+                    card.id = generateFlashcardId(card);
+                    fullFlashcardDeck.push(card);
                 }
             });
         }
@@ -1493,49 +1538,80 @@ function openFlashcardsModal() {
             top.data.ejercicios.forEach(ex => {
                 const exTitle = ex.title || 'Ejercicio';
                 if (Array.isArray(ex.identificacion) && ex.identificacion.length > 0) {
-                    currentFlashcardDeck.push({
-                        type: 'Identificación de Problema',
+                    const card = {
+                        subjectName,
+                        topicName,
+                        title: `Identificar: ${exTitle}`,
+                        frontRaw: exTitle,
+                        type: 'Identificación',
                         typeBack: 'Criterios de Reconocimiento',
-                        front: `¿Cómo identificar en el examen que debes aplicar:<br><br><strong>${sanitizeHTML(exTitle)}</strong>?`,
-                        back: `<ul style="text-align:left; padding-left:18px; margin:0;">${ex.identificacion.map(id => `<li style="margin-bottom:4px;">${sanitizeHTML(id)}</li>`).join('')}</ul>`
-                    });
+                        category: 'exercise',
+                        front: `<div>¿Cómo reconocer en el examen que debes aplicar:</div><div style="font-size:1.05em; font-weight:800; color:var(--primary); margin-top:6px;">${sanitizeHTML(exTitle)}</div>`,
+                        back: `<div style="text-align:left; width:100%;"><ul style="padding-left:18px; margin:0; line-height:1.45;">${ex.identificacion.map(id => `<li style="margin-bottom:3px;">${sanitizeHTML(id)}</li>`).join('')}</ul></div>`
+                    };
+                    card.id = generateFlashcardId(card);
+                    fullFlashcardDeck.push(card);
                 }
 
                 // 3. Pasos del Algoritmo
                 if (Array.isArray(ex.algoritmo) && ex.algoritmo.length > 0) {
                     ex.algoritmo.forEach((st, sIdx) => {
-                        currentFlashcardDeck.push({
-                            type: 'Algoritmo de Resolución',
-                            typeBack: `Paso ${sIdx + 1}: ${sanitizeHTML(st.title || '')}`,
-                            front: `En <strong>${sanitizeHTML(exTitle)}</strong>:<br><br>¿Cuál es el <strong>Paso ${sIdx + 1}</strong> (${sanitizeHTML(st.title || '')}) y cómo se opera?`,
-                            back: `<div style="text-align:left;"><strong>Operación:</strong> ${sanitizeHTML(st.subtitle || '')} ${st.example ? `<br><br><strong>Ejemplo / Fórmula:</strong><br><code>${sanitizeHTML(st.example)}</code>` : ''}</div>`
-                        });
+                        const stepTitle = st.title || `Paso ${sIdx + 1}`;
+                        const card = {
+                            subjectName,
+                            topicName,
+                            title: `${exTitle} — Paso ${sIdx + 1}`,
+                            frontRaw: `${exTitle}_paso_${sIdx + 1}`,
+                            type: 'Algoritmo',
+                            typeBack: `Paso ${sIdx + 1}: ${sanitizeHTML(stepTitle)}`,
+                            category: 'exercise',
+                            front: `<div>En <strong>${sanitizeHTML(exTitle)}</strong>:</div><div style="font-size:1.02em; font-weight:700; color:var(--text-heading); margin-top:6px;">¿Cuál es el <strong>Paso ${sIdx + 1}</strong> (${sanitizeHTML(stepTitle)}) y cómo se opera?</div>`,
+                            back: `<div style="text-align:left; width:100%;"><div style="margin-bottom:4px;"><strong>Operación:</strong> ${sanitizeHTML(st.subtitle || '')}</div>${st.example ? `<div style="margin-top:6px;"><strong>Ejemplo / Fórmula:</strong><br><code>${sanitizeHTML(st.example)}</code></div>` : ''}</div>`
+                        };
+                        card.id = generateFlashcardId(card);
+                        fullFlashcardDeck.push(card);
                     });
                 }
 
                 // 4. Trampas y Errores
                 const traps = [...(ex.trampas || []), ...(ex.errores || [])];
-                traps.forEach(tr => {
+                traps.forEach((tr, tIdx) => {
                     if (tr.title || tr.content) {
-                        currentFlashcardDeck.push({
-                            type: 'Trampa Típica de Examen',
+                        const trTitle = tr.title || `Trampa ${tIdx + 1}`;
+                        const card = {
+                            subjectName,
+                            topicName,
+                            title: `Alerta: ${exTitle} — ${trTitle}`,
+                            frontRaw: `${exTitle}_trampa_${trTitle}`,
+                            type: 'Trampa de Examen',
                             typeBack: 'Prevención y Solución',
-                            front: `¡Alerta en <strong>${sanitizeHTML(exTitle)}</strong>!<br><br>¿Qué error grave suele cometerse respecto a <strong>${sanitizeHTML(tr.title || 'este punto')}</strong>?`,
-                            back: `<div style="text-align:left; color:#991b1b;"><strong>Peligro:</strong> ${sanitizeHTML(tr.content || '')} ${tr.fix ? `<br><br><span style="color:#065f46;"><strong>Solución / Regla:</strong> ${sanitizeHTML(tr.fix)}</span>` : ''}</div>`
-                        });
+                            category: 'exercise',
+                            front: `<div style="color:#ef4444; font-weight:800; font-size:0.85em; text-transform:uppercase; letter-spacing:0.04em;">¡Alerta de Examen!</div><div style="margin-top:6px;">En <strong>${sanitizeHTML(exTitle)}</strong>, ¿qué error grave suele cometerse en: <em>${sanitizeHTML(trTitle)}</em>?</div>`,
+                            back: `<div style="text-align:left; width:100%;"><div style="color:#b91c1c; margin-bottom:6px;"><strong>Peligro:</strong> ${sanitizeHTML(tr.content || '')}</div>${tr.fix ? `<div style="color:#047857;"><strong>Solución:</strong> ${sanitizeHTML(tr.fix)}</div>` : ''}</div>`
+                        };
+                        card.id = generateFlashcardId(card);
+                        fullFlashcardDeck.push(card);
                     }
                 });
 
                 // 5. Trucos y Atajos
                 if (Array.isArray(ex.trucos)) {
-                    ex.trucos.forEach(tr => {
+                    ex.trucos.forEach((tr, trIdx) => {
                         if (tr.title || tr.content) {
-                            currentFlashcardDeck.push({
-                                type: 'Truco de Velocidad',
+                            const trTitle = tr.title || `Truco ${trIdx + 1}`;
+                            const card = {
+                                subjectName,
+                                topicName,
+                                title: `Atajo: ${exTitle} — ${trTitle}`,
+                                frontRaw: `${exTitle}_truco_${trTitle}`,
+                                type: 'Truco',
                                 typeBack: 'Atajo Aplicable',
-                                front: `¿Qué truco o atajo existe para <strong>${sanitizeHTML(exTitle)}</strong>?<br><br><em>${sanitizeHTML(tr.title || '')}</em>`,
-                                back: `<div style="text-align:left; color:#065f46;"><strong>Truco:</strong> ${sanitizeHTML(tr.content || '')} ${tr.fix ? `<br><br><strong>Aplicación:</strong> ${sanitizeHTML(tr.fix)}` : ''}</div>`
-                            });
+                                category: 'exercise',
+                                front: `<div style="color:#10b981; font-weight:800; font-size:0.85em; text-transform:uppercase; letter-spacing:0.04em;">Truco de Velocidad</div><div style="margin-top:6px;">Para <strong>${sanitizeHTML(exTitle)}</strong>:<br>¿Cuál es el atajo de <em>${sanitizeHTML(trTitle)}</em>?</div>`,
+                                back: `<div style="text-align:left; width:100%;"><div style="color:#047857; margin-bottom:4px;"><strong>Atajo:</strong> ${sanitizeHTML(tr.content || '')}</div>${tr.fix ? `<div><strong>Uso:</strong> ${sanitizeHTML(tr.fix)}</div>` : ''}</div>`
+                            };
+                            card.id = generateFlashcardId(card);
+                            fullFlashcardDeck.push(card);
                         }
                     });
                 }
@@ -1543,25 +1619,120 @@ function openFlashcardsModal() {
         }
     });
 
-    if (currentFlashcardDeck.length === 0) {
+    if (fullFlashcardDeck.length === 0) {
         customAlert('No se encontraron suficientes conceptos teóricos o algoritmos estructurados en este tema para generar flashcards. Añade ejercicios o una checklist de teoría primero.', 'Flashcards Vacías');
         return;
     }
 
-    // Mezcla pseudo-aleatoria uniforme (Fisher-Yates) para no estudiar en orden idéntico
-    for (let i = currentFlashcardDeck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [currentFlashcardDeck[i], currentFlashcardDeck[j]] = [currentFlashcardDeck[j], currentFlashcardDeck[i]];
+    // Actualizar contadores del registro y configurar mazo inicial
+    updateFlashcardLedgerBadges();
+    applyFlashcardFilters();
+    switchFlashcardTab('review');
+    openModal('flashcardsModal');
+}
+
+function updateFlashcardLedgerBadges() {
+    const history = getFlashcardHistory();
+    let countDoubt = 0;
+    let countReview = 0;
+
+    fullFlashcardDeck.forEach(card => {
+        const item = history[card.id];
+        if (item) {
+            if (item.status === 'doubt') countDoubt++;
+            else if (item.status === 'review') countReview++;
+        }
+    });
+
+    const badge = document.getElementById('fcLedgerFailedBadge');
+    if (badge) {
+        const failedTotal = countDoubt + countReview;
+        if (failedTotal > 0) {
+            badge.innerText = failedTotal;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
+function applyFlashcardFilters() {
+    const history = getFlashcardHistory();
+
+    let filtered = fullFlashcardDeck.filter(card => {
+        const hist = history[card.id];
+        if (flashcardSessionFilter === 'failed') {
+            return hist && (hist.status === 'doubt' || hist.status === 'review');
+        } else if (flashcardSessionFilter === 'unseen') {
+            return !hist || !hist.status;
+        } else if (flashcardSessionFilter === 'theory') {
+            return card.category === 'theory';
+        } else if (flashcardSessionFilter === 'exercises') {
+            return card.category === 'exercise';
+        }
+        return true;
+    });
+
+    if (filtered.length === 0) {
+        if (flashcardSessionFilter === 'failed') {
+            customAlert('¡Enhorabuena! No tienes tarjetas marcadas como dudosas o falladas en este tema. Te mostramos el mazo completo.', 'Sin Falladas');
+            flashcardSessionFilter = 'all';
+            const select = document.getElementById('fcDifficultySelect');
+            if (select) select.value = 'all';
+            filtered = [...fullFlashcardDeck];
+        } else if (flashcardSessionFilter === 'unseen') {
+            customAlert('Ya has repasado todas las tarjetas disponibles. Te mostramos el mazo completo.', 'Todas Repasadas');
+            flashcardSessionFilter = 'all';
+            const select = document.getElementById('fcDifficultySelect');
+            if (select) select.value = 'all';
+            filtered = [...fullFlashcardDeck];
+        }
     }
 
+    // Mezcla pseudo-aleatoria uniforme (Fisher-Yates)
+    for (let i = filtered.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [filtered[i], filtered[j]] = [filtered[j], filtered[i]];
+    }
+
+    if (flashcardSessionLimit !== 'all') {
+        const lim = parseInt(flashcardSessionLimit, 10);
+        if (!isNaN(lim) && lim > 0) {
+            currentFlashcardDeck = filtered.slice(0, lim);
+        } else {
+            currentFlashcardDeck = filtered;
+        }
+    } else {
+        currentFlashcardDeck = filtered;
+    }
+
+    currentFlashcardIndex = 0;
     renderCurrentFlashcard();
-    openModal('flashcardsModal');
+}
+
+function setFlashcardLimit(limit, btn) {
+    flashcardSessionLimit = limit;
+    if (btn) {
+        const container = btn.closest('.fc-chip-group');
+        if (container) {
+            container.querySelectorAll('.fc-chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+        }
+    }
+    applyFlashcardFilters();
+}
+
+function changeFlashcardFilter(val) {
+    flashcardSessionFilter = val;
+    applyFlashcardFilters();
 }
 
 function renderCurrentFlashcard() {
     const inner = document.getElementById('flashcardInner');
+    const crumbFront = document.getElementById('fc-crumb-front');
     const typeFront = document.getElementById('fc-type-front');
     const frontText = document.getElementById('fc-front-text');
+    const crumbBack = document.getElementById('fc-crumb-back');
     const typeBack = document.getElementById('fc-type-back');
     const backText = document.getElementById('fc-back-text');
     const counter = document.getElementById('flashcard-counter');
@@ -1572,12 +1743,17 @@ function renderCurrentFlashcard() {
     inner.classList.remove('is-flipped');
 
     if (currentFlashcardIndex >= currentFlashcardDeck.length) {
-        if (typeFront) typeFront.innerText = '¡Completado!';
+        if (crumbFront) crumbFront.innerText = 'Repaso Completado';
+        if (typeFront) typeFront.innerText = '¡Meta Lograda!';
         frontText.innerHTML = `
-            <div style="text-align:center; padding:10px;">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="margin-bottom:12px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                <div style="font-size:1.25rem; font-weight:800; color:var(--text-heading); margin-bottom:6px;">¡Sesión de Repaso Finalizada!</div>
-                <div style="font-size:0.88rem; color:var(--text-muted);">Has reforzado exitosamente todos los conceptos programados. Vuelve a repasar cuando quieras afianzar tu memoria.</div>
+            <div style="text-align:center; padding:12px;">
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="margin-bottom:10px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <div style="font-size:1.18rem; font-weight:800; color:var(--text-heading); margin-bottom:6px;">¡Sesión de Flashcards Completada!</div>
+                <div style="font-size:0.86rem; color:var(--text-muted); line-height:1.5;">Has repasado con éxito los <strong>${currentFlashcardDeck.length}</strong> conceptos programados. Tu progreso ha quedado guardado automáticamente en el registro.</div>
+                <div style="margin-top:14px; display:inline-flex; gap:8px;">
+                    <button class="btn btn-primary" onclick="openFlashcardsModal()">Repetir Sesión</button>
+                    <button class="btn btn-secondary" onclick="switchFlashcardTab('ledger')">Ver Registro</button>
+                </div>
             </div>
         `;
         if (counter) counter.innerText = `${currentFlashcardDeck.length} / ${currentFlashcardDeck.length}`;
@@ -1585,10 +1761,14 @@ function renderCurrentFlashcard() {
     }
 
     const card = currentFlashcardDeck[currentFlashcardIndex];
+    if (crumbFront) crumbFront.innerText = card.topicName || 'Tema';
     if (typeFront) typeFront.innerText = card.type || 'Flashcard';
     frontText.innerHTML = card.front;
-    if (typeBack) typeBack.innerText = card.typeBack || 'Respuesta / Desarrollo';
+
+    if (crumbBack) crumbBack.innerText = card.topicName || 'Resolución';
+    if (typeBack) typeBack.innerText = card.typeBack || 'Respuesta';
     backText.innerHTML = card.back;
+
     if (counter) counter.innerText = `${currentFlashcardIndex + 1} / ${currentFlashcardDeck.length}`;
 
     if (wrapper) {
@@ -1610,20 +1790,177 @@ function rateFlashcard(rating) {
 
     const card = currentFlashcardDeck[currentFlashcardIndex];
 
-    // Algoritmo SRS simplificado intra-sesión
+    // Registro Autónomo Persistente en localStorage
+    const history = getFlashcardHistory();
+    const prev = history[card.id] || { timesReviewed: 0, timesFailed: 0, streak: 0 };
+    const statusMap = { 'mal': 'doubt', 'regular': 'review', 'perfecto': 'mastered' };
+    const newStatus = statusMap[rating] || 'doubt';
+
+    history[card.id] = {
+        id: card.id,
+        title: card.title || card.type,
+        subjectName: card.subjectName || '',
+        topicName: card.topicName || '',
+        type: card.type || 'Flashcard',
+        status: newStatus,
+        lastReviewed: Date.now(),
+        timesReviewed: (prev.timesReviewed || 0) + 1,
+        timesFailed: rating === 'mal' ? ((prev.timesFailed || 0) + 1) : (prev.timesFailed || 0),
+        streak: rating === 'perfecto' ? ((prev.streak || 0) + 1) : 0
+    };
+    saveFlashcardHistory(history);
+    updateFlashcardLedgerBadges();
+
+    // Algoritmo SRS intra-sesión
     if (rating === 'mal') {
-        // Reinsertar 3 posiciones más adelante o al final para forzar repetición inmediata
         const targetPos = Math.min(currentFlashcardIndex + 3, currentFlashcardDeck.length);
         currentFlashcardDeck.splice(targetPos, 0, card);
     } else if (rating === 'regular') {
-        // Reinsertar 6 posiciones más adelante o al final
         const targetPos = Math.min(currentFlashcardIndex + 6, currentFlashcardDeck.length);
         currentFlashcardDeck.splice(targetPos, 0, card);
     }
-    // Si es 'perfecto', avanza limpiamente sin reinsertar
 
     currentFlashcardIndex++;
     renderCurrentFlashcard();
+}
+
+function switchFlashcardTab(tab) {
+    flashcardActiveTab = tab;
+    const reviewView = document.getElementById('fcViewReview');
+    const ledgerView = document.getElementById('fcViewLedger');
+    const tabRevBtn = document.getElementById('fcTabReviewBtn');
+    const tabLedBtn = document.getElementById('fcTabLedgerBtn');
+
+    if (tab === 'review') {
+        if (reviewView) reviewView.style.display = 'block';
+        if (ledgerView) ledgerView.style.display = 'none';
+        if (tabRevBtn) tabRevBtn.classList.add('active');
+        if (tabLedBtn) tabLedBtn.classList.remove('active');
+        renderCurrentFlashcard();
+    } else {
+        if (reviewView) reviewView.style.display = 'none';
+        if (ledgerView) ledgerView.style.display = 'flex';
+        if (tabRevBtn) tabRevBtn.classList.remove('active');
+        if (tabLedBtn) tabLedBtn.classList.add('active');
+        renderFlashcardLedger();
+    }
+}
+
+function renderFlashcardLedger() {
+    const history = getFlashcardHistory();
+
+    let countMastered = 0;
+    let countReview = 0;
+    let countDoubt = 0;
+    let countUnseen = 0;
+
+    fullFlashcardDeck.forEach(card => {
+        const item = history[card.id];
+        if (!item || !item.status) countUnseen++;
+        else if (item.status === 'mastered') countMastered++;
+        else if (item.status === 'review') countReview++;
+        else if (item.status === 'doubt') countDoubt++;
+    });
+
+    const elM = document.getElementById('fcCountMastered');
+    const elR = document.getElementById('fcCountReview');
+    const elD = document.getElementById('fcCountDoubt');
+    const elU = document.getElementById('fcCountUnseen');
+
+    if (elM) elM.innerText = countMastered;
+    if (elR) elR.innerText = countReview;
+    if (elD) elD.innerText = countDoubt;
+    if (elU) elU.innerText = countUnseen;
+
+    updateFlashcardLedgerBadges();
+    renderFlashcardLedgerList();
+}
+
+function renderFlashcardLedgerList() {
+    const listContainer = document.getElementById('fcLedgerList');
+    if (!listContainer) return;
+
+    const history = getFlashcardHistory();
+    const searchVal = (document.getElementById('fcLedgerSearch')?.value || '').trim().toLowerCase();
+
+    const items = fullFlashcardDeck.map(card => {
+        const hist = history[card.id];
+        return {
+            id: card.id,
+            title: card.title || card.type,
+            topicName: card.topicName || '',
+            subjectName: card.subjectName || '',
+            type: card.type || 'Flashcard',
+            status: hist ? hist.status : 'none',
+            timesReviewed: hist ? (hist.timesReviewed || 0) : 0,
+            lastReviewed: hist ? hist.lastReviewed : null
+        };
+    });
+
+    const filtered = items.filter(it => {
+        if (ledgerStatusFilter !== 'all' && it.status !== ledgerStatusFilter) return false;
+        if (searchVal) {
+            const matchTitle = it.title.toLowerCase().includes(searchVal);
+            const matchTopic = it.topicName.toLowerCase().includes(searchVal);
+            return matchTitle || matchTopic;
+        }
+        return true;
+    });
+
+    if (filtered.length === 0) {
+        listContainer.innerHTML = '<div style="padding:16px; text-align:center; color:var(--text-muted); font-size:0.84rem;">No se encontraron tarjetas con este criterio de búsqueda o filtro.</div>';
+        return;
+    }
+
+    const statusLabels = {
+        mastered: 'Perfecto',
+        review: 'Regular',
+        doubt: 'Mal',
+        none: 'Sin Calificar'
+    };
+
+    listContainer.innerHTML = filtered.map(it => {
+        const dateStr = it.lastReviewed ? new Date(it.lastReviewed).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'Nunca';
+        return `
+            <div class="fc-ledger-item">
+                <div class="fc-ledger-item-left">
+                    <span class="fc-ledger-title">${sanitizeHTML(it.title)}</span>
+                    <span class="fc-ledger-meta">${sanitizeHTML(it.topicName)} • Repasado: <strong>${it.timesReviewed}</strong> vez/veces • Último: ${dateStr}</span>
+                </div>
+                <span class="fc-ledger-tag status-${it.status}">${statusLabels[it.status] || 'Pendiente'}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function setLedgerStatusFilter(st, btn) {
+    ledgerStatusFilter = st;
+    if (btn) {
+        const group = btn.closest('.fc-ledger-filter-pills');
+        if (group) {
+            group.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+    }
+    renderFlashcardLedgerList();
+}
+
+function startFailedFlashcardsSession() {
+    flashcardSessionFilter = 'failed';
+    const select = document.getElementById('fcDifficultySelect');
+    if (select) select.value = 'failed';
+    applyFlashcardFilters();
+    switchFlashcardTab('review');
+}
+
+function resetFlashcardLedger() {
+    customConfirm('¿Deseas reiniciar por completo el registro histórico de retención de flashcards? Comenzarás de nuevo con todas las tarjetas sin calificar.', (ok) => {
+        if (ok) {
+            localStorage.removeItem('universos_flashcards_history');
+            renderFlashcardLedger();
+            updateFlashcardLedgerBadges();
+        }
+    });
 }
 
 // Atajos de teclado para Flashcards (Espacio para voltear, 1/2/3 para calificar)
@@ -1631,7 +1968,7 @@ window.addEventListener('keydown', (e) => {
     const modal = document.getElementById('flashcardsModal');
     if (!modal || !modal.classList.contains('active')) return;
 
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) return;
 
     if (e.code === 'Space') {
         e.preventDefault();

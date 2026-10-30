@@ -32,6 +32,7 @@ const sandbox = {
     encodeURIComponent,
     decodeURIComponent,
     window: {
+        addEventListener: () => {},
         crypto: {
             subtle: {
                 digest: async (algo, data) => {
@@ -75,6 +76,7 @@ loadScript('js/sanitizer.js');
 loadScript('js/state.js');
 loadScript('js/import-export.js');
 loadScript('js/cloud-sync.js');
+loadScript('js/render.js');
 
 let passed = 0;
 let failed = 0;
@@ -318,6 +320,41 @@ async function runTestSuite() {
     assert(inversaEx.mastery === 'mastered', 'Preserva el mayor nivel de dominio durante la fusión (mastered > doubt)');
     
     assert(matMerged.data.teoria.checklistClave.length === 3, 'Fusiona checklist sin duplicar ítems existentes (2 remotos + 1 local = 3)');
+
+    // 11. Motor Autónomo de Flashcards SRS y Registro Persistente
+    console.log('[11] Motor Autónomo de Flashcards SRS y Registro Persistente:');
+    const dummyCard = {
+        subjectName: 'Cálculo II',
+        topicName: 'Integrales Impropias',
+        type: 'Concepto Clave',
+        frontRaw: 'Criterio del Paso al Límite'
+    };
+    dummyCard.id = sandbox.generateFlashcardId(dummyCard);
+    assert(dummyCard.id.startsWith('fc_calculo_ii_integrales_impropias_concepto_clave'), 'Genera un ID determinista y normalizado para la flashcard');
+
+    sandbox.localStorage._store = {};
+    const initialHist = sandbox.getFlashcardHistory();
+    assert(Object.keys(initialHist).length === 0, 'Inicia con registro de retención vacío');
+
+    // Simular calificación "mal" y verificar registro automático
+    sandbox.fullFlashcardDeck = [dummyCard];
+    sandbox.currentFlashcardDeck = [dummyCard];
+    sandbox.currentFlashcardIndex = 0;
+    sandbox.rateFlashcard('mal');
+
+    const updatedHist = sandbox.getFlashcardHistory();
+    assert(updatedHist[dummyCard.id] !== undefined, 'Registra automáticamente la flashcard en localStorage sin intervención manual');
+    assert(updatedHist[dummyCard.id].status === 'doubt', 'Estado registrado como doubt tras calificar "mal"');
+    assert(updatedHist[dummyCard.id].timesFailed === 1, 'Contabiliza el fallo en el historial');
+
+    // Simular calificación "perfecto" sobre la misma tarjeta
+    sandbox.currentFlashcardDeck = [dummyCard];
+    sandbox.currentFlashcardIndex = 0;
+    sandbox.rateFlashcard('perfecto');
+
+    const masteredHist = sandbox.getFlashcardHistory();
+    assert(masteredHist[dummyCard.id].status === 'mastered', 'Actualiza el estado a mastered tras calificar "perfecto"');
+    assert(masteredHist[dummyCard.id].streak === 1, 'Incrementa la racha de aciertos continuos (streak = 1)');
 
     // Resumen Final
     console.log('\n========================================');

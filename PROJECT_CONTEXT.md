@@ -5,9 +5,9 @@
 ---
 
 ## 1. Identidad y Stack
-- **Identidad:** SPA cliente para la preparación y dominio de asignaturas universitarias STEM (teoría, heurística de examen, resolución algorítmica por pasos, chuletas imprimibles, simulador interactivo, flashcards SRS, telemetría y modo offline PWA).
-- **Versión:** `v2.6.1` (Smart Cloud Merge + Balanced High-Density Cheatsheets + Flashcards SRS + Study Telemetry + Radial View Transitions).
-- **Stack:** Vanilla JavaScript (ES6+ modular, sin bundlers ni dependencias de runtime), HTML5 semántico con roles ARIA, CSS3 modular (Custom Properties, Grid & Flexbox, animaciones con curvas Emil Kowalski), CDN MathJax v3 (renderizado TeX asíncrono con debounce en cola), Service Worker nativo (estrategia Cache-First y Stale-While-Revalidate para PWA), Supabase REST API (sincronización bidireccional no destructiva con derivación criptográfica SHA-256) y Google Gemini API (generación multimodal client-side).
+- **Identidad:** SPA cliente para la preparación y dominio de asignaturas universitarias STEM (teoría rigurosa, heurística de examen, resolución algorítmica por pasos, chuletas imprimibles, simulador interactivo, flashcards SRS adaptativas con registro autónomo, telemetría y modo offline PWA).
+- **Versión:** `v2.7.0` (Autonomous Flashcards SRS & Retention Ledger + Clean Print Engine + Smart Cloud Merge + Balanced High-Density Cheatsheets).
+- **Stack:** Vanilla JavaScript (ES6+ modular, sin bundlers ni dependencias de runtime), HTML5 semántico con roles ARIA, CSS3 modular (Custom Properties, Grid & Flexbox, micro-interacciones spring y transiciones radiales de 60 FPS), CDN MathJax v3 (renderizado TeX asíncrono con debounce en cola), Service Worker nativo (estrategia Cache-First y Stale-While-Revalidate para PWA `v2.7`), Supabase REST API (sincronización bidireccional no destructiva con derivación criptográfica SHA-256) y Google Gemini API (generación multimodal client-side).
 
 ---
 
@@ -22,11 +22,12 @@
 | **ADR-05** | **Z-Index Layering Estricto y Modales Frontales** | Capas estrictas para impedir solapamientos: fondo base (`z-index: 200`), preview (`z-index: 260`) y alertas/confirmaciones críticas (`z-index: 400 !important`). |
 | **ADR-06** | **Interacción Pointerdown/Mousedown No Destructiva** | La selección de texto y arrastre de ratón que termina fuera de un contenedor no cierra el modal; el cierre requiere que inicio y fin ocurran en el backdrop. |
 | **ADR-07** | **PWA Offline-First con Service Worker (`sw.js`)** | Permite instalar UniverSOS como aplicación de escritorio y móvil autónoma. Cache-First para recursos locales, Stale-While-Revalidate para CDNs externas (Google Fonts, MathJax) y bypass estricto para APIs en vivo (Supabase, Gemini). |
-| **ADR-08** | **Zero-Dependency Automated Testing Harness** | Suite de pruebas unitarias (`tests/run-tests.mjs`) ejecutable con `npm test` o `node tests/run-tests.mjs`, garantizando regresión cero en el parser JSON resiliente, ecuaciones LaTeX, normalización y derivación de contraseñas sin librerías npm externas. |
-| **ADR-09** | **Fusión en la Nube Inteligente y No Destructiva (`mergeDatabasesSafely`)** | Al sincronizar con Supabase (tanto al subir como al descargar), se pre-consulta el registro remoto y se ejecuta una fusión bidireccional profunda. Compara asignaturas y temas por ID o nombre normalizado sin acentos, fusiona ejercicios sin duplicar y preserva el nivel de dominio más alto (`mastered` > `review` > `doubt` > `none`). Evita pérdidas de datos al iniciar sesión en dispositivos nuevos. |
+| **ADR-08** | **Zero-Dependency Automated Testing Harness** | Suite de pruebas unitarias (`tests/run-tests.mjs`) ejecutable con `npm test` o `node tests/run-tests.mjs`, garantizando regresión cero en el parser JSON resiliente, ecuaciones LaTeX, normalización, derivación de contraseñas y motor SRS sin dependencias npm externas. |
+| **ADR-09** | **Fusión en la Nube Inteligente y No Destructiva (`mergeDatabasesSafely`)** | Al sincronizar con Supabase (tanto al subir como al descargar), se pre-consulta el registro remoto y se ejecuta una fusión bidireccional profunda por nombre normalizado sin acentos. Evita pérdidas de datos o sobrescritura accidental al iniciar sesión en dispositivos nuevos. |
 | **ADR-10** | **Balanced Density Engine para Chuletas de Examen** | `column-fill: balance;` y desacople de `break-inside: avoid` en `.cs-block` (manteniendo `break-inside: avoid` solo en filas atómicas como `.cs-step-row`, `.cs-alert-pill`, `.cs-compact-list li`). Elimina los huecos en blanco al final de columna y añade modo de 4 columnas (ultra-compacto) optimizado para impresión A4. |
-| **ADR-11** | **Repaso Espaciado Activo (Flashcards SRS)** | Generación dinámica de tarjetas desde la teoría, criterios de identificación, pasos de algoritmo, trampas y trucos del tema activo. Sistema SRS intra-sesión (repetición inmediata en caso de fallo) con atajos de teclado (`Espacio` para voltear, `1`/`2`/`3` para calificar). |
+| **ADR-11** | **Repaso Espaciado Activo y Registro Autónomo (Flashcards SRS)** | Generación dinámica de tarjetas desde la teoría, criterios de identificación, pasos de algoritmo, trampas y trucos del tema activo. Tarjetas con diseño de alta gama sin barras de scroll, adaptadas visualmente. Registro persistente autónomo en `localStorage` (`universos_flashcards_history`), control paramétrico de cantidad (5, 10, 20, todas) y filtros de dificultad (todas, falladas, pendientes, teoría, problemas). |
 | **ADR-12** | **Transición de Tema Concéntrica (Radial View Transition)** | Animación circular fluida al alternar entre tema claro y oscuro mediante la API nativa `document.startViewTransition()` con `clip-path` expansivo centrado en el punto de clic del usuario (`toggleTheme(event)`). |
+| **ADR-13** | **Aislamiento Estricto de Impresión (@media print)** | Ocultamiento compulsivo de barras de herramientas interactivas (`.cheatsheet-item-selector`, `#cheatsheetItemSelector`, `.mastery-filter-bar`, `.top-nav`, `.sidebar`) en la hoja impresa, garantizando que el documento A4 contenga exclusivamente la materia de estudio sin elementos de control UI. |
 
 ---
 
@@ -34,14 +35,15 @@
 
 | Módulo / Funcionalidad | Estado | Detalles Técnicos |
 | :--- | :--- | :--- |
+| **Flashcards SRS & Registro Autónomo** | `Completo` | Mazo interactivo 3D sin scroll, auto-guardado en `universos_flashcards_history`, selector de cantidad (5/10/20/todas), filtro de dificultad y vista de registro con opción "Repasar solo falladas". |
+| **Aislamiento Limpio de Impresión** | `Completo` | Supresión de selectores de tema/ejercicios (`.cheatsheet-item-selector`) y filtros de dominio en `@media print`. Salida de impresión 100% limpia. |
 | **Fusión Cloud No Destructiva** | `Completo` | `mergeDatabasesSafely()` en `cloud-sync.js`. Previene borrados accidentales de temas remotos al subir desde nuevas pestañas o dispositivos. |
 | **Chuletas de Alta Densidad Equilibradas** | `Completo` | Soporte de 1 a 4 columnas con `column-fill: balance;`, micro-tipografía optimizada y corte fluido sin espacios artificiales en blanco. |
-| **Flashcards SRS (Repaso Activo)** | `Completo` | Deck generado automáticamente con mezclas Fisher-Yates, animación 3D de volteo y algoritmo de refuerzo ('Mal', 'Regular', 'Perfecto'). |
 | **Panel de Métricas y Telemetría** | `Completo` | Modal `#statsModal` con conteo global de asignaturas, temas, ejercicios y barra proporcional de dominio de aprendizaje. |
 | **Transición de Tema Radial** | `Completo` | `document.startViewTransition()` con interpolación concéntrica de radio circular `clip-path` a 60 FPS. |
-| **PWA & Offline Engine** | `Completo` | Manifiesto PWA (`manifest.json`), icono SVG de alta definición (`icons/icon.svg`) y Service Worker (`sw.js`) con precache y offline fallback. |
-| **Test Suite Automatizado** | `Completo` | 34 pruebas unitarias sin dependencias externas (`tests/run-tests.mjs`) que validan parsing resiliente, fórmulas LaTeX, seguridad hash y fusión de bases de datos. |
-| **Accesibilidad ARIA & Teclado** | `Completo` | Roles `dialog` y `alertdialog`, atributos `aria-modal`, `aria-labelledby`, `aria-describedby` y control de atajos (`Ctrl+Enter` para textareas). |
+| **PWA & Offline Engine** | `Completo` | Manifiesto PWA (`manifest.json`), icono SVG de alta definición (`icons/icon.svg`) y Service Worker (`sw.js`) con precache y offline fallback (`v2.7`). |
+| **Test Suite Automatizado** | `Completo` | 41 pruebas unitarias sin dependencias externas (`tests/run-tests.mjs`) que validan parsing resiliente, fórmulas LaTeX, seguridad hash, fusión de bases de datos y motor SRS. |
+| **Accesibilidad ARIA & Teclado** | `Completo` | Roles `dialog` y `alertdialog`, atributos `aria-modal`, `aria-labelledby`, `aria-describedby` y control de atajos (`Espacio` y `1`/`2`/`3` para flashcards, `Ctrl+Enter` para textareas). |
 | **Gestión de Temario (CRUD)** | `Completo` | Alta, baja y edición en cascada de Asignaturas, Temas, Teoría y Ejercicios sin dejar huérfanos (`edit.js`). |
 | **Visor de Teoría y Ejercicios** | `Completo` | Tarjeta de teoría distinguida, pasos algorítmicos numerados, trucos y trampas con callouts en gris neutral e iconos SVG monocolor (`render.js`). |
 | **Renderizado Matemático (MathJax v3)** | `Completo` | Typesetting en cola serializada con debouncer de 40ms y renderizado focalizado en acordeones sin tirones (`math-render.js`). |
@@ -52,8 +54,10 @@
 
 ---
 
-## 4. Tareas Pendientes y Roadmap Futuro (Backlog Priorizado)
+## 4. Tareas Pendientes y Roadmap Futuro (Backlog Priorizado de Alta Gama)
 
-1. **[Export / PDF Vectorial]** Integración opcional de renderizado directo de Chuleta a PDF vectorial autónomo mediante stream en cliente sin pasar por el spooler del navegador.
-2. **[Audio / Pomodoro]** Modo concentración con temporizador Pomodoro integrado en la barra de navegación para sesiones de examen continuo.
-3. **[Graph / Visual Concept Map]** Mapeo de prerrequisitos y dependencias entre temas mediante grafos SVG interactivos para visualizar la progresión de la asignatura.
+1. **[SRS / Algoritmo SuperMemo SM-2 Intervalos Reales]** Extender el motor de flashcards actual (intra-sesión) calculando intervalos de días en base al factor de facilidad $EF$ ($EF' = EF + (0.1 - (5-q) \times (0.08 + (5-q) \times 0.02))$) con indicador de "tarjetas que tocan hoy".
+2. **[Export / PDF Vectorial Directo]** Generador de exportación directa a archivo `.pdf` vectorizado en cliente mediante `html2pdf` o stream de canvas local sin depender del cuadro de diálogo de impresión del navegador.
+3. **[Focus Mode / Temporizador Pomodoro con Sonidos Lofi]** Modo concentración para estudio inmersivo con barra de progreso superior, pausas estructuradas de 25/5 min y síntesis de audio suave para inicio/fin.
+4. **[Graph / Visual Knowledge Dependency Graph]** Grafo de dependencias interactivo (SVG/Canvas) que muestre qué temas o teoremas son prerrequisitos de otros dentro de la asignatura, iluminando nodos dominados vs dudosos.
+5. **[Voice / Text-to-Speech para Flashcards y Teoría]** Síntesis de voz nativa del navegador (`window.speechSynthesis`) para escuchar los enunciados y soluciones de las tarjetas flashcards mientras se repasa con la pantalla bloqueada o en movimiento.
