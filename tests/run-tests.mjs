@@ -73,10 +73,13 @@ function loadScript(relPath) {
 
 // Cargar módulos core de lógica matemática, sanitización, importación y nube
 loadScript('js/sanitizer.js');
+loadScript('js/sm2.js');
 loadScript('js/state.js');
 loadScript('js/import-export.js');
 loadScript('js/cloud-sync.js');
 loadScript('js/render.js');
+loadScript('js/exam-generator.js');
+loadScript('js/skill-tree.js');
 
 let passed = 0;
 let failed = 0;
@@ -355,6 +358,105 @@ async function runTestSuite() {
     const masteredHist = sandbox.getFlashcardHistory();
     assert(masteredHist[dummyCard.id].status === 'mastered', 'Actualiza el estado a mastered tras calificar "perfecto"');
     assert(masteredHist[dummyCard.id].streak === 1, 'Incrementa la racha de aciertos continuos (streak = 1)');
+
+    // 12. Algoritmo SuperMemo SM-2 (Spaced Repetition Determinista)
+    console.log('[12] Algoritmo SuperMemo SM-2 (Spaced Repetition):');
+    const t0 = 1700000000000;
+    // Repaso 1: acierto con q=4
+    let sm2State = sandbox.calculateSM2(null, 4, t0);
+    assert(sm2State.reps === 1 && sm2State.interval === 1, 'SM-2: Primer acierto establece reps=1 e intervalo=1 día');
+    assert(sm2State.nextReviewDate === t0 + 1 * 86400000, 'SM-2: Programa el próximo repaso exactamente en 1 día');
+
+    // Repaso 2: acierto con q=4
+    sm2State = sandbox.calculateSM2(sm2State, 4, t0 + 86400000);
+    assert(sm2State.reps === 2 && sm2State.interval === 6, 'SM-2: Segundo acierto consecutivo avanza intervalo a 6 días');
+
+    // Repaso 3: acierto con q=5 (aumenta EF)
+    sm2State = sandbox.calculateSM2(sm2State, 5, t0 + 7 * 86400000);
+    assert(sm2State.reps === 3 && sm2State.interval === 16, 'SM-2: Tercer acierto escala intervalo según el factor de facilidad (6 * 2.6 = 16)');
+    assert(sm2State.easeFactor === 2.6, 'SM-2: Calificación perfecta (q=5) eleva el factor de facilidad EF');
+
+    // Repaso 4: fallo con q=1
+    sm2State = sandbox.calculateSM2(sm2State, 1, t0 + 23 * 86400000);
+    assert(sm2State.reps === 0 && sm2State.interval === 1, 'SM-2: Un fallo (q=1) reinicia las repeticiones a 0 e intervalo a 1 día');
+    assert(sm2State.streak === 0, 'SM-2: El fallo resetea la racha de aciertos');
+
+    // Límite inferior del Factor de Facilidad EF (mínimo 1.3)
+    for (let f = 0; f < 10; f++) {
+        sm2State = sandbox.calculateSM2(sm2State, 1, t0);
+    }
+    assert(sm2State.easeFactor === 1.3, 'SM-2: El factor de facilidad no desciende nunca por debajo del mínimo de seguridad 1.3');
+
+    // Comprobación de tarjetas vencidas (isCardDueForSM2)
+    assert(sandbox.isCardDueForSM2(null), 'SM-2: Una tarjeta sin historial previo se considera pendiente de repaso');
+    assert(sandbox.isCardDueForSM2({ nextReviewDate: t0 - 1000 }, t0), 'SM-2: Tarjeta con fecha vencida se considera pendiente');
+    assert(!sandbox.isCardDueForSM2({ nextReviewDate: t0 + 100000 }, t0), 'SM-2: Tarjeta con fecha futura no se considera pendiente');
+
+    // 13. Generador de Exámenes Imprimibles A4
+    console.log('[13] Generador de Exámenes Imprimibles A4:');
+    // Prueba de cálculo y cuadre de baremos a 10.00 pts
+    function testExamPoints(count) {
+        const basePt = Number((10 / count).toFixed(2));
+        let pts = [];
+        let accumulated = 0;
+        for (let i = 0; i < count; i++) {
+            if (i === count - 1) {
+                pts.push(Number((10 - accumulated).toFixed(2)));
+            } else {
+                accumulated += basePt;
+                pts.push(basePt);
+            }
+        }
+        return Number(pts.reduce((a, b) => a + b, 0).toFixed(2));
+    }
+    assert(testExamPoints(4) === 10.00, 'Baremo de examen: 4 problemas suman exactamente 10.00 puntos');
+    assert(testExamPoints(3) === 10.00, 'Baremo de examen: 3 problemas con redondeo decimal suman exactamente 10.00 puntos');
+    assert(testExamPoints(5) === 10.00, 'Baremo de examen: 5 problemas suman exactamente 10.00 puntos');
+
+    // 14. Árbol de Habilidades y Dominio de Temas
+    console.log('[14] Árbol de Habilidades y Dominio de Temas:');
+    const mockSubject = { id: 's1', name: 'Álgebra Lineal' };
+    const mockTopicMastered = {
+        id: 't1',
+        name: 'Matrices',
+        data: {
+            ejercicios: [
+                { title: 'Ej 1', dominio: 'mastered' },
+                { title: 'Ej 2', dominio: 'mastered' },
+                { title: 'Ej 3', dominio: 'mastered' },
+                { title: 'Ej 4', dominio: 'mastered' }
+            ]
+        }
+    };
+    const mastery1 = sandbox.calculateTopicMastery(mockTopicMastered, mockSubject);
+    assert(mastery1.percent === 100 && mastery1.status === 'mastered', 'Árbol: Tema con 100% de ejercicios dominados se clasifica como mastered');
+
+    const mockTopicProgress = {
+        id: 't2',
+        name: 'Sistemas',
+        data: {
+            ejercicios: [
+                { title: 'Ej 1', dominio: 'mastered' },
+                { title: 'Ej 2', dominio: 'doubt' },
+                { title: 'Ej 3', dominio: 'none' }
+            ]
+        }
+    };
+    const mastery2 = sandbox.calculateTopicMastery(mockTopicProgress, mockSubject);
+    assert(mastery2.status === 'progress', 'Árbol: Tema con dudas o dominio intermedio se clasifica como progress');
+
+    const mockTopicPending = {
+        id: 't3',
+        name: 'Diagonalización',
+        data: {
+            ejercicios: [
+                { title: 'Ej 1', dominio: 'none' },
+                { title: 'Ej 2', dominio: 'none' }
+            ]
+        }
+    };
+    const mastery3 = sandbox.calculateTopicMastery(mockTopicPending, mockSubject);
+    assert(mastery3.percent === 0 && mastery3.status === 'pending', 'Árbol: Tema sin ejercicios completados se clasifica como pending');
 
     // Resumen Final
     console.log('\n========================================');

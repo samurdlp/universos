@@ -744,8 +744,39 @@ mjx-container::-webkit-scrollbar-thumb {
     .sidebar-footer,
     .cheatsheet-item-selector,
     #cheatsheetItemSelector,
-    .modal-overlay:not(#cheatsheetModal) {
+    .modal-overlay:not(#cheatsheetModal):not(#examPreviewModal) {
         display: none !important;
+    }
+
+    /* Aislamiento de Impresión para el Examen Oficial A4 */
+    #examPreviewModal {
+        position: static !important;
+        display: block !important;
+        background: #ffffff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        backdrop-filter: none !important;
+    }
+
+    #examPreviewModal .modal {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+
+    #examPreviewModal .exam-preview-toolbar {
+        display: none !important;
+    }
+
+    #examPreviewModal .exam-preview-scroll {
+        padding: 0 !important;
+        background: #ffffff !important;
+        overflow: visible !important;
     }
 
     /* Si está abierto el Generador de Chuleta, imprimir EXCLUSIVAMENTE la chuleta compacta */

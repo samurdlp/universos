@@ -2013,3 +2013,326 @@ mark.search-target-highlight.fade-out {
         touch-action: manipulation;
     }
 }
+
+/* ==========================================================================
+   ESTILOS DE ALTA GAMA: GENERADOR DE EXÁMENES IMPRIMIBLES A4 STEM
+   ========================================================================== */
+
+.exam-topic-chk-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.exam-topic-chk-item:hover {
+    background: var(--bg-hover);
+}
+
+.exam-a4-sheet {
+    background: #ffffff;
+    color: #0f172a;
+    padding: 24px;
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.5;
+}
+
+.exam-a4-header {
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+}
+
+.exam-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.exam-univ-badge {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #475569;
+    text-transform: uppercase;
+}
+
+.exam-subject-title {
+    margin: 2px 0 4px;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+}
+
+.exam-meta-line {
+    font-size: 0.8rem;
+    color: #475569;
+}
+
+.exam-grade-box {
+    border: 2px solid #0f172a;
+    border-radius: 6px;
+    padding: 6px 14px;
+    text-align: center;
+    background: #f8fafc;
+    min-width: 110px;
+}
+
+.exam-grade-title {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #475569;
+}
+
+.exam-grade-score {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: #0f172a;
+    font-family: var(--font-mono);
+}
+
+.exam-student-fields {
+    display: flex;
+    gap: 14px;
+    margin: 14px 0 10px;
+    flex-wrap: wrap;
+}
+
+.exam-field-item {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    min-width: 180px;
+}
+
+.exam-field-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #334155;
+    white-space: nowrap;
+}
+
+.exam-field-line {
+    flex: 1;
+    border-bottom: 1px dashed #64748b;
+    height: 18px;
+}
+
+.exam-breakdown-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 12px;
+    font-size: 0.78rem;
+    text-align: center;
+}
+
+.exam-breakdown-table th,
+.exam-breakdown-table td {
+    border: 1px solid #94a3b8;
+    padding: 4px 6px;
+}
+
+.exam-breakdown-table th {
+    background: #f1f5f9;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.exam-th-total,
+.exam-td-total {
+    background: #e2e8f0 !important;
+    font-weight: 900;
+}
+
+.exam-tr-nota td {
+    height: 24px;
+}
+
+.exam-instructions-box {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.72rem;
+    color: #334155;
+}
+
+.exam-instructions-box ol {
+    margin: 4px 0 0;
+    padding-left: 18px;
+    line-height: 1.45;
+}
+
+.exam-problem-block {
+    margin-bottom: 24px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.exam-prob-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.exam-prob-badge {
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+}
+
+.exam-prob-pts {
+    font-size: 0.78rem;
+    color: #0f172a;
+}
+
+.exam-prob-topic {
+    font-size: 0.72rem;
+    color: #64748b;
+    margin-left: auto;
+}
+
+.exam-prob-title {
+    margin: 4px 0 6px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.exam-prob-statement {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+
+/* Espacio pautado con rejilla milimétrica suave de examen */
+.exam-draft-grid-box {
+    width: 100%;
+    height: 310px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    background-color: #ffffff;
+    background-image: 
+        linear-gradient(#f1f5f9 1px, transparent 1px),
+        linear-gradient(90deg, #f1f5f9 1px, transparent 1px);
+    background-size: 20px 20px;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.exam-draft-watermark {
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Solucionario de Corrección */
+.exam-solutions-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px dashed #94a3b8;
+    page-break-before: always;
+    break-before: page;
+}
+
+.exam-solutions-header {
+    margin-bottom: 16px;
+}
+
+.exam-sol-badge {
+    display: inline-block;
+    background: #047857;
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.06em;
+}
+
+.exam-sol-card {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 0.82rem;
+}
+
+.exam-sol-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    color: #0f172a;
+}
+
+.exam-sol-pts-tag {
+    background: #e2e8f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.75rem;
+}
+
+.exam-sol-subbox {
+    margin-top: 8px;
+}
+
+.exam-sol-subbox ul,
+.exam-sol-subbox ol {
+    margin: 4px 0 0;
+    padding-left: 18px;
+    line-height: 1.5;
+}
+
+/* ==========================================================================
+   ESTILOS DE ALTA GAMA: ÁRBOL DE HABILIDADES Y MAPA DE DEPENDENCIAS
+   ========================================================================== */
+
+.skill-tree-node rect {
+    transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.skill-tree-node:hover rect {
+    stroke-width: 3.2;
+    filter: drop-shadow(0 8px 16px rgba(0,0,0,0.12));
+}
+
+.skill-detail-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.skill-metric-pill {
+    transition: transform 0.2s ease;
+}
+
+.skill-metric-pill:hover {
+    transform: translateY(-2px);
+}
+

@@ -1,9 +1,9 @@
 /**
  * UniverSOS — Service Worker Offline-First (PWA Cache Engine)
- * Versión: universos-v2.7-offline
+ * Versión: universos-v2.8-offline
  */
 
-const CACHE_NAME = 'universos-v2.7-offline';
+const CACHE_NAME = 'universos-v2.8-offline';
 
 const PRECACHE_ASSETS = [
     './',
@@ -15,10 +15,13 @@ const PRECACHE_ASSETS = [
     './css/components.css',
     './css/modals.css',
     './js/sanitizer.js',
+    './js/sm2.js',
     './js/state.js',
     './js/modals.js',
     './js/math-render.js',
     './js/render.js',
+    './js/exam-generator.js',
+    './js/skill-tree.js',
     './js/edit.js',
     './js/import-export.js',
     './js/ai.js',

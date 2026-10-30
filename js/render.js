@@ -1686,6 +1686,7 @@ function updateSetupUI() {
     let countMastered = 0;
     let countReview = 0;
     let countDoubt = 0;
+    let countDue = 0;
 
     fullFlashcardDeck.forEach(card => {
         const item = history[card.id];
@@ -1694,17 +1695,24 @@ function updateSetupUI() {
             else if (item.status === 'review') countReview++;
             else if (item.status === 'doubt') countDoubt++;
         }
+        if (typeof isCardDueForSM2 === 'function') {
+            if (isCardDueForSM2(item)) countDue++;
+        } else {
+            if (!item || item.status === 'doubt' || item.status === 'review') countDue++;
+        }
     });
 
     const elTot = document.getElementById('fcSetupTotalCount');
     const elMas = document.getElementById('fcSetupMasteredCount');
     const elRev = document.getElementById('fcSetupReviewCount');
     const elFail = document.getElementById('fcSetupFailedCount');
+    const elDue = document.getElementById('fcSetupDueCount');
 
     if (elTot) elTot.innerText = fullFlashcardDeck.length;
     if (elMas) elMas.innerText = countMastered;
     if (elRev) elRev.innerText = countReview;
     if (elFail) elFail.innerText = countDoubt;
+    if (elDue) elDue.innerText = countDue;
 
     updateFlashcardLedgerBadges();
     updateSetupStartButtonText();
@@ -1746,7 +1754,9 @@ function updateSetupStartButtonText() {
     const history = getFlashcardHistory();
     const candidateCards = fullFlashcardDeck.filter(card => {
         const hist = history[card.id];
-        if (flashcardSessionFilter === 'failed') {
+        if (flashcardSessionFilter === 'sm2due' || flashcardSessionFilter === 'due') {
+            return typeof isCardDueForSM2 === 'function' ? isCardDueForSM2(hist) : (!hist || hist.status !== 'mastered');
+        } else if (flashcardSessionFilter === 'failed') {
             return hist && (hist.status === 'doubt' || hist.status === 'review');
         } else if (flashcardSessionFilter === 'unseen') {
             return !hist || !hist.status;
@@ -1775,12 +1785,18 @@ function updateFlashcardLedgerBadges() {
     const history = getFlashcardHistory();
     let countDoubt = 0;
     let countReview = 0;
+    let countDue = 0;
 
     fullFlashcardDeck.forEach(card => {
         const item = history[card.id];
         if (item) {
             if (item.status === 'doubt') countDoubt++;
             else if (item.status === 'review') countReview++;
+        }
+        if (typeof isCardDueForSM2 === 'function') {
+            if (isCardDueForSM2(item)) countDue++;
+        } else {
+            if (!item || item.status === 'doubt' || item.status === 'review') countDue++;
         }
     });
 
@@ -1794,6 +1810,16 @@ function updateFlashcardLedgerBadges() {
             badge.style.display = 'none';
         }
     }
+
+    const navDueBadge = document.getElementById('fcNavDueBadge');
+    if (navDueBadge) {
+        if (countDue > 0) {
+            navDueBadge.innerText = countDue;
+            navDueBadge.style.display = 'inline-block';
+        } else {
+            navDueBadge.style.display = 'none';
+        }
+    }
 }
 
 function applyFlashcardFilters() {
@@ -1801,7 +1827,9 @@ function applyFlashcardFilters() {
 
     let filtered = fullFlashcardDeck.filter(card => {
         const hist = history[card.id];
-        if (flashcardSessionFilter === 'failed') {
+        if (flashcardSessionFilter === 'sm2due' || flashcardSessionFilter === 'due') {
+            return typeof isCardDueForSM2 === 'function' ? isCardDueForSM2(hist) : (!hist || hist.status !== 'mastered');
+        } else if (flashcardSessionFilter === 'failed') {
             return hist && (hist.status === 'doubt' || hist.status === 'review');
         } else if (flashcardSessionFilter === 'unseen') {
             return !hist || !hist.status;
@@ -1905,13 +1933,27 @@ function renderCurrentFlashcard() {
     if (counter) counter.innerText = `${currentFlashcardIndex + 1} / ${currentFlashcardDeck.length}`;
 
     const filterNames = {
-        all: 'Todas',
+        all: 'Mazo Completo',
+        sm2due: 'Repaso Diario SM-2',
+        due: 'Repaso Diario SM-2',
         failed: 'Solo Falladas',
         theory: 'Solo Teoría',
         exercises: 'Solo Algoritmos',
         unseen: 'Solo Pendientes'
     };
     if (filterBadge) filterBadge.innerText = filterNames[flashcardSessionFilter] || 'Mazo';
+
+    // Pre-calcular intervalos SM-2 proyectados para los botones de calificación
+    if (typeof previewNextIntervals === 'function') {
+        const history = getFlashcardHistory();
+        const intervals = previewNextIntervals(history[card.id]);
+        const malLbl = document.getElementById('fcRateLabelMal');
+        const regLbl = document.getElementById('fcRateLabelRegular');
+        const perfLbl = document.getElementById('fcRateLabelPerfecto');
+        if (malLbl) malLbl.innerText = `${intervals[1]} [1]`;
+        if (regLbl) regLbl.innerText = `${intervals[3]} [2]`;
+        if (perfLbl) perfLbl.innerText = `${intervals[5]} [3]`;
+    }
 
     // Typeset de MathJax garantizando todos los contenedores de fórmulas
     forceMathRender([contextBox, questionBox, solutionBox, formulaBox].filter(Boolean));
@@ -1933,33 +1975,48 @@ function rateFlashcard(rating) {
     }
 
     const card = currentFlashcardDeck[currentFlashcardIndex];
-
-    // Registro Autónomo Persistente en localStorage
     const history = getFlashcardHistory();
     const prev = history[card.id] || { timesReviewed: 0, timesFailed: 0, streak: 0 };
-    const statusMap = { 'mal': 'doubt', 'regular': 'review', 'perfecto': 'mastered' };
-    const newStatus = statusMap[rating] || 'doubt';
+
+    // Mapeo a calidad SM-2 (1..5)
+    let quality = 3;
+    if (rating === 'mal' || rating === 1) quality = 1;
+    else if (rating === 'regular' || rating === 3) quality = 3;
+    else if (rating === 'bien' || rating === 4) quality = 4;
+    else if (rating === 'perfecto' || rating === 5) quality = 5;
+
+    // Ejecutar cálculo matemático SuperMemo SM-2
+    let sm2Data = {};
+    if (typeof calculateSM2 === 'function') {
+        sm2Data = calculateSM2(prev, quality);
+    } else {
+        const statusMap = { 'mal': 'doubt', 'regular': 'review', 'perfecto': 'mastered' };
+        sm2Data = {
+            status: statusMap[rating] || 'doubt',
+            timesReviewed: (prev.timesReviewed || 0) + 1,
+            timesFailed: rating === 'mal' ? ((prev.timesFailed || 0) + 1) : (prev.timesFailed || 0),
+            streak: rating === 'perfecto' ? ((prev.streak || 0) + 1) : 0,
+            lastReviewed: Date.now()
+        };
+    }
 
     history[card.id] = {
+        ...prev,
+        ...sm2Data,
         id: card.id,
         title: card.title || card.type,
         subjectName: card.subjectName || '',
         topicName: card.topicName || '',
-        type: card.type || 'Flashcard',
-        status: newStatus,
-        lastReviewed: Date.now(),
-        timesReviewed: (prev.timesReviewed || 0) + 1,
-        timesFailed: rating === 'mal' ? ((prev.timesFailed || 0) + 1) : (prev.timesFailed || 0),
-        streak: rating === 'perfecto' ? ((prev.streak || 0) + 1) : 0
+        type: card.type || 'Flashcard'
     };
     saveFlashcardHistory(history);
     updateFlashcardLedgerBadges();
 
     // Algoritmo SRS intra-sesión
-    if (rating === 'mal') {
+    if (quality <= 2) {
         const targetPos = Math.min(currentFlashcardIndex + 3, currentFlashcardDeck.length);
         currentFlashcardDeck.splice(targetPos, 0, card);
-    } else if (rating === 'regular') {
+    } else if (quality === 3) {
         const targetPos = Math.min(currentFlashcardIndex + 6, currentFlashcardDeck.length);
         currentFlashcardDeck.splice(targetPos, 0, card);
     }

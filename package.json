@@ -1,6 +1,6 @@
 {
   "name": "universos",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "Gestor Integral de Estudio Universitario STEM, Algoritmos Paso a Paso y Chuletas de Alta Densidad",
   "type": "module",
   "scripts": {
