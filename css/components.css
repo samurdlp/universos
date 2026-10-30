@@ -1229,75 +1229,192 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
     line-height: 1.2;
 }
 
+/* ==========================================================================
+   MENÚ INICIAL DE CONFIGURACIÓN DE SESIÓN FLASHCARDS
+   ========================================================================== */
+.fc-setup-container {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.fc-setup-header {
+    text-align: left;
+}
+
+.fc-setup-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-heading);
+    margin: 0 0 4px 0;
+}
+
+.fc-setup-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+    margin: 0;
+}
+
+.fc-setup-stats-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    background: var(--bg-body);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+}
+
+.fc-setup-section-title {
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin: 6px 0 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.fc-scope-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.fc-scope-btn {
+    background: var(--bg-body);
+    border: 1.5px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 9px 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.fc-scope-btn.active {
+    border-color: var(--primary);
+    background: var(--primary-bg);
+}
+
+.fc-scope-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+.fc-scope-sub {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fc-number-selector {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+}
+
+.fc-number-btn {
+    background: var(--bg-body);
+    border: 1.5px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 9px 4px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 0.88rem;
+    cursor: pointer;
+    color: var(--text-heading);
+    transition: all 0.2s ease;
+}
+
+.fc-number-btn:hover {
+    border-color: var(--primary);
+}
+
+.fc-number-btn.active {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.35);
+}
+
+.fc-diff-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+@media (max-width: 600px) {
+    .fc-diff-grid, .fc-scope-selector {
+        grid-template-columns: 1fr;
+    }
+}
+
+.fc-diff-card {
+    background: var(--bg-body);
+    border: 1.5px solid var(--border-subtle);
+    border-radius: 9px;
+    padding: 9px 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.fc-diff-card:hover {
+    border-color: var(--primary);
+}
+
+.fc-diff-card.active {
+    border-color: var(--primary);
+    background: var(--primary-bg);
+}
+
+.fc-diff-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.fc-diff-desc {
+    font-size: 0.71rem;
+    color: var(--text-muted);
+}
+
+/* ==========================================================================
+   VISTA DE TARJETA ADAPTATIVA (SIN SCROLL, ENUNCIADO VS PREGUNTA)
+   ========================================================================== */
 .fc-session-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
     background: var(--bg-body);
     border: 1px solid var(--border-subtle);
     border-radius: 10px;
-    padding: 8px 12px;
+    padding: 6px 12px;
     margin-bottom: 8px;
-}
-
-.fc-bar-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.fc-bar-label {
-    font-size: 0.74rem;
-    font-weight: 700;
-    color: var(--text-muted);
-}
-
-.fc-chip-group {
-    display: inline-flex;
-    gap: 4px;
-}
-
-.fc-chip {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    color: var(--text-body);
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.fc-chip:hover {
-    border-color: var(--primary);
-}
-
-.fc-chip.active {
-    background: var(--primary);
-    color: #ffffff;
-    border-color: var(--primary);
-}
-
-.fc-select {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    color: var(--text-heading);
-    font-size: 0.74rem;
-    font-weight: 600;
-    padding: 4px 8px;
-    border-radius: 6px;
-    cursor: pointer;
-    outline: none;
 }
 
 .flashcard-wrapper {
     perspective: 1400px;
     width: 100%;
-    min-height: 340px;
+    height: 420px;
+    min-height: 380px;
+    max-height: calc(85vh - 200px);
     margin: 8px 0 14px 0;
     cursor: pointer;
     user-select: none;
@@ -1307,7 +1424,8 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
 .flashcard-inner {
     position: relative;
     width: 100%;
-    min-height: 340px;
+    height: 100%;
+    min-height: 100%;
     text-align: center;
     transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
     transform-style: preserve-3d;
@@ -1325,7 +1443,7 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     border-radius: 16px;
-    padding: 24px 26px;
+    padding: 20px 22px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -1351,8 +1469,114 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
 .flashcard-face mjx-container {
     max-width: 100% !important;
     overflow-x: hidden !important;
-    font-size: 88% !important;
+    font-size: 90% !important;
     margin: 2px 0 !important;
+    display: inline-block !important;
+}
+
+.flashcard-face-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    overflow: hidden;
+    padding: 4px 0;
+}
+
+/* Distinción clara: Caja de Enunciado vs Caja de Pregunta */
+.fc-context-card {
+    background: var(--bg-body);
+    border: 1px solid var(--border-subtle);
+    border-radius: 9px;
+    padding: 8px 12px;
+    text-align: left;
+    width: 100%;
+    border-left: 3px solid var(--primary);
+}
+
+.fc-context-tag {
+    font-size: 0.66rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 2px;
+}
+
+.fc-context-text {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--text-body);
+    line-height: 1.4;
+}
+
+.fc-question-card {
+    background: rgba(59, 130, 246, 0.06);
+    border: 1.5px solid rgba(59, 130, 246, 0.3);
+    border-radius: 11px;
+    padding: 12px 14px;
+    text-align: left;
+    width: 100%;
+}
+
+.fc-question-tag {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 4px;
+}
+
+.fc-question-text {
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: var(--text-heading);
+    line-height: 1.45;
+}
+
+.fc-solution-card {
+    background: rgba(16, 185, 129, 0.05);
+    border: 1.5px solid rgba(16, 185, 129, 0.3);
+    border-radius: 11px;
+    padding: 12px 14px;
+    text-align: left;
+    width: 100%;
+}
+
+.fc-solution-tag {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #10b981;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 6px;
+}
+
+.fc-solution-text {
+    font-size: 0.90rem;
+    color: var(--text-heading);
+    line-height: 1.5;
+}
+
+.fc-formula-box {
+    background: var(--step-content-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-top: 6px;
+    font-size: 0.86rem;
+    text-align: left;
 }
 
 .fc-topic-crumb {

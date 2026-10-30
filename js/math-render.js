@@ -10,6 +10,7 @@
 
 let isMathJaxTypesetting = false;
 let pendingMathJaxTypeset = false;
+let pendingMathJaxTargets = null;
 let mathDebounceTimer = null;
 
 function forceMathRender(elements) {
@@ -29,6 +30,7 @@ function forceMathRender(elements) {
 function executeMathRender(elements) {
     if (isMathJaxTypesetting) {
         pendingMathJaxTypeset = true;
+        pendingMathJaxTargets = elements || pendingMathJaxTargets;
         return;
     }
 
@@ -54,7 +56,9 @@ function executeMathRender(elements) {
                 isMathJaxTypesetting = false;
                 if (pendingMathJaxTypeset) {
                     pendingMathJaxTypeset = false;
-                    executeMathRender();
+                    const nextTargets = pendingMathJaxTargets;
+                    pendingMathJaxTargets = null;
+                    executeMathRender(nextTargets);
                 }
             });
     } catch (e) {
