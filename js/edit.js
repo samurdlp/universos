@@ -3,10 +3,43 @@
  * Maneja la creación, renombramiento, eliminación en cascada y alternancia de temas/menús.
  */
 
-function toggleTheme() { 
-    document.body.classList.toggle('dark');
-    const currentTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
-    localStorage.setItem(THEME_KEY, currentTheme);
+function toggleTheme(event) { 
+    const isDark = document.body.classList.contains('dark');
+    const newTheme = isDark ? 'light' : 'dark';
+
+    if (!document.startViewTransition) {
+        document.body.classList.toggle('dark');
+        localStorage.setItem(THEME_KEY, newTheme);
+        return;
+    }
+
+    const x = (event && event.clientX) ? event.clientX : (window.innerWidth - 40);
+    const y = (event && event.clientY) ? event.clientY : 30;
+    const endRadius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+    );
+
+    const transition = document.startViewTransition(() => {
+        document.body.classList.toggle('dark');
+        localStorage.setItem(THEME_KEY, newTheme);
+    });
+
+    transition.ready.then(() => {
+        document.documentElement.animate(
+            {
+                clipPath: [
+                    `circle(0px at ${x}px ${y}px)`,
+                    `circle(${endRadius}px at ${x}px ${y}px)`
+                ]
+            },
+            {
+                duration: 450,
+                easing: 'cubic-bezier(0.23, 1, 0.32, 1)',
+                pseudoElement: '::view-transition-new(root)'
+            }
+        );
+    });
 }
 
 function toggleClass(element) { 

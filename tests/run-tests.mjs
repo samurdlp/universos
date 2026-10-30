@@ -235,6 +235,90 @@ async function runTestSuite() {
     const analysisDb = sandbox.analyzeImportedData(dbBackupData, []);
     assert(analysisDb.detectedType === 'full_db', 'Detecta correctamente Backup de Base de Datos');
 
+    // 10. Fusión Inteligente y No Destructiva de Base de Datos en la Nube (mergeDatabasesSafely)
+    console.log('[10] Fusión Inteligente y No Destructiva (mergeDatabasesSafely):');
+    const remoteCloudDb = {
+        subjects: [
+            {
+                id: 's_alg',
+                name: 'Álgebra Lineal',
+                topics: [
+                    {
+                        id: 't_mat',
+                        name: '1. Matrices y Determinantes',
+                        data: {
+                            teoria: {
+                                checklistClave: ['Definición de rango', 'Determinante de orden n'],
+                                mastery: 'review'
+                            },
+                            ejercicios: [
+                                { title: 'Cálculo de Inversa por Gauss', mastery: 'doubt' },
+                                { title: 'Rango con Parámetros', mastery: 'review' }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+    };
+
+    const newLocalSessionDb = {
+        subjects: [
+            // Misma asignatura (sin acento) con tema nuevo y ejercicio actualizado
+            {
+                id: 's_alg_diff_id',
+                name: 'Algebra Lineal',
+                topics: [
+                    {
+                        id: 't_mat_diff_id',
+                        name: '1. Matrices y determinantes',
+                        data: {
+                            teoria: {
+                                checklistClave: ['Definición de rango', 'Teorema de Rouché-Frobenius'],
+                                mastery: 'mastered'
+                            },
+                            ejercicios: [
+                                { title: 'Cálculo de Inversa por Gauss', mastery: 'mastered' },
+                                { title: 'Método de Cramer', mastery: 'none' }
+                            ]
+                        }
+                    },
+                    {
+                        id: 't_esp',
+                        name: '2. Espacios Vectoriales',
+                        data: {
+                            teoria: { checklistClave: ['Base y Dimensión'] },
+                            ejercicios: [{ title: 'Independencia Lineal' }]
+                        }
+                    }
+                ]
+            },
+            // Asignatura completamente nueva añadida en esta sesión
+            {
+                id: 's_fis',
+                name: 'Física I',
+                topics: [
+                    { id: 't_cin', name: 'Cinemática', data: { ejercicios: [] } }
+                ]
+            }
+        ]
+    };
+
+    const merged = sandbox.mergeDatabasesSafely(remoteCloudDb, newLocalSessionDb);
+
+    assert(merged.subjects.length === 2, 'Conserva la asignatura existente y añade la nueva (total: 2)');
+    const algMerged = merged.subjects.find(s => sandbox.normalizeCompareName(s.name) === 'algebra lineal');
+    assert(algMerged !== undefined, 'Encuentra y unifica la asignatura Álgebra Lineal por nombre normalizado');
+    assert(algMerged.topics.length === 2, 'Unifica los temas: conserva Matrices y añade Espacios Vectoriales');
+    
+    const matMerged = algMerged.topics.find(t => sandbox.normalizeCompareName(t.name).includes('matrices'));
+    assert(matMerged.data.ejercicios.length === 3, 'Fusiona ejercicios sin duplicados (2 existentes + 1 nuevo = 3)');
+    
+    const inversaEx = matMerged.data.ejercicios.find(e => e.title.includes('Inversa'));
+    assert(inversaEx.mastery === 'mastered', 'Preserva el mayor nivel de dominio durante la fusión (mastered > doubt)');
+    
+    assert(matMerged.data.teoria.checklistClave.length === 3, 'Fusiona checklist sin duplicar ítems existentes (2 remotos + 1 local = 3)');
+
     // Resumen Final
     console.log('\n========================================');
     console.log(`Resultados: ${passed} pasados, ${failed} fallidos`);

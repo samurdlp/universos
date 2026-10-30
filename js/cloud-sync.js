@@ -195,6 +195,114 @@ function checkUrlCloudMagicConfig() {
     }
 }
 
+function normalizeCompareName(str) {
+    if (!str || typeof str !== 'string') return '';
+    return str.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+/**
+ * Fusión Inteligente y No Destructiva de Bases de Datos
+ * Combina asignaturas, temas y ejercicios sin sobrescribir ni duplicar elementos existentes.
+ */
+function mergeDatabasesSafely(baseDB, incomingDB) {
+    if (!incomingDB || !Array.isArray(incomingDB.subjects)) return baseDB || { subjects: [] };
+    if (!baseDB || !Array.isArray(baseDB.subjects)) {
+        return JSON.parse(JSON.stringify(incomingDB));
+    }
+
+    const merged = JSON.parse(JSON.stringify(baseDB));
+
+    incomingDB.subjects.forEach(incSubj => {
+        const incNorm = normalizeCompareName(incSubj.name);
+        let targetSubj = merged.subjects.find(s => 
+            s.id === incSubj.id || 
+            normalizeCompareName(s.name) === incNorm || 
+            (s.aliases && s.aliases.some(a => normalizeCompareName(a) === incNorm))
+        );
+
+        if (!targetSubj) {
+            // Asignatura nueva que no existía: añadir completa
+            merged.subjects.push(JSON.parse(JSON.stringify(incSubj)));
+            return;
+        }
+
+        // Si ya existe la asignatura, fusionar sus temas
+        if (!Array.isArray(targetSubj.topics)) targetSubj.topics = [];
+        if (!Array.isArray(incSubj.topics)) return;
+
+        incSubj.topics.forEach(incTopic => {
+            const incTopNorm = normalizeCompareName(incTopic.name);
+            let targetTopic = targetSubj.topics.find(t => 
+                t.id === incTopic.id || 
+                normalizeCompareName(t.name) === incTopNorm || 
+                (t.aliases && t.aliases.some(a => normalizeCompareName(a) === incTopNorm))
+            );
+
+            if (!targetTopic) {
+                // Tema nuevo que no existía: añadirlo
+                targetSubj.topics.push(JSON.parse(JSON.stringify(incTopic)));
+                return;
+            }
+
+            // Si el tema existe en ambos, fusionar datos (teoría y ejercicios)
+            if (!targetTopic.data) targetTopic.data = {};
+            const incData = incTopic.data || {};
+
+            // 1. Fusión de Teoría
+            if (!targetTopic.data.teoria && incData.teoria) {
+                targetTopic.data.teoria = JSON.parse(JSON.stringify(incData.teoria));
+            } else if (targetTopic.data.teoria && incData.teoria) {
+                // Fusionar checklist de conceptos clave sin duplicar
+                if (Array.isArray(incData.teoria.checklistClave)) {
+                    if (!Array.isArray(targetTopic.data.teoria.checklistClave)) {
+                        targetTopic.data.teoria.checklistClave = [];
+                    }
+                    incData.teoria.checklistClave.forEach(incItem => {
+                        const incItemText = typeof incItem === 'string' ? incItem : (incItem.title || '');
+                        const incItemNorm = normalizeCompareName(incItemText);
+                        const exists = targetTopic.data.teoria.checklistClave.some(tItem => {
+                            const tText = typeof tItem === 'string' ? tItem : (tItem.title || '');
+                            return normalizeCompareName(tText) === incItemNorm;
+                        });
+                        if (!exists) {
+                            targetTopic.data.teoria.checklistClave.push(JSON.parse(JSON.stringify(incItem)));
+                        }
+                    });
+                }
+                // Si la versión entrante tiene nivel de dominio superior, actualizar
+                const masteryWeight = { 'mastered': 3, 'review': 2, 'doubt': 1, 'none': 0 };
+                const curTheoW = masteryWeight[targetTopic.data.teoria.mastery || 'none'] || 0;
+                const incTheoW = masteryWeight[incData.teoria.mastery || 'none'] || 0;
+                if (incTheoW > curTheoW) {
+                    targetTopic.data.teoria.mastery = incData.teoria.mastery;
+                }
+            }
+
+            // 2. Fusión de Ejercicios (sin repetir por título)
+            if (!Array.isArray(targetTopic.data.ejercicios)) targetTopic.data.ejercicios = [];
+            if (Array.isArray(incData.ejercicios)) {
+                incData.ejercicios.forEach(incEx => {
+                    const incExNorm = normalizeCompareName(incEx.title);
+                    const existingEx = targetTopic.data.ejercicios.find(e => normalizeCompareName(e.title) === incExNorm);
+                    if (!existingEx) {
+                        targetTopic.data.ejercicios.push(JSON.parse(JSON.stringify(incEx)));
+                    } else {
+                        // Preservar estado de dominio más avanzado
+                        const masteryWeight = { 'mastered': 3, 'review': 2, 'doubt': 1, 'none': 0 };
+                        const curW = masteryWeight[existingEx.mastery || 'none'] || 0;
+                        const incW = masteryWeight[incEx.mastery || 'none'] || 0;
+                        if (incW > curW) {
+                            existingEx.mastery = incEx.mastery;
+                        }
+                    }
+                });
+            }
+        });
+    });
+
+    return merged;
+}
+
 async function pushToCloud() {
     saveCloudSettings(true);
     const cfg = getCloudConfig();
@@ -207,13 +315,42 @@ async function pushToCloud() {
         return;
     }
 
-    if (statusDiv) statusDiv.innerHTML = `<span style="color:var(--primary); font-weight:600;">Subiendo apuntes a la nube...</span>`;
+    if (statusDiv) statusDiv.innerHTML = `<span style="color:var(--primary); font-weight:600;">Comprobando datos remotos y fusionando...</span>`;
 
     try {
         const effectiveKey = await computeEffectiveSyncKey(cfg.syncId, cfg.syncPass);
+
+        // 1. Obtener datos existentes en la nube antes de subir para no perder asignaturas previas
+        let mergedDB = appDB;
+        try {
+            const checkRes = await fetch(`${cfg.url}/rest/v1/universos_sync?id=eq.${encodeURIComponent(effectiveKey)}&select=*`, {
+                method: 'GET',
+                headers: {
+                    'apikey': cfg.key,
+                    'Authorization': `Bearer ${cfg.key}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (checkRes.ok) {
+                const existingRecords = await checkRes.json();
+                if (existingRecords && existingRecords.length > 0 && existingRecords[0].data) {
+                    mergedDB = mergeDatabasesSafely(existingRecords[0].data, appDB);
+                }
+            }
+        } catch (fetchErr) {
+            console.warn('No se pudo verificar base remota previa; continuando con datos locales:', fetchErr);
+        }
+
+        // 2. Persistir localmente el resultado fusionado
+        appDB = mergedDB;
+        saveDB();
+        renderDropdowns();
+        if (activeTopicId) renderTopicExercises();
+
+        // 3. Subir la base de datos combinada
         const payload = {
             id: effectiveKey,
-            data: appDB,
+            data: mergedDB,
             updated_at: new Date().toISOString()
         };
 
@@ -233,15 +370,18 @@ async function pushToCloud() {
             throw new Error(`HTTP ${response.status}: ${errText}`);
         }
 
+        const totalSubjs = mergedDB.subjects.length;
+        const totalTopics = mergedDB.subjects.reduce((acc, s) => acc + (s.topics ? s.topics.length : 0), 0);
+
         if (statusDiv) {
-            statusDiv.innerHTML = `<span style="color:var(--c-truco); font-weight:700;">¡Subida completada con éxito!</span> Tus apuntes están sincronizados bajo el ID <code>${sanitizeHTML(cfg.syncId)}</code>.`;
+            statusDiv.innerHTML = `<span style="color:var(--c-truco); font-weight:700;">¡Sincronizado y fusionado con éxito!</span> ${totalSubjs} asignaturas y ${totalTopics} temas sincronizados bajo <code>${sanitizeHTML(cfg.syncId)}</code> sin duplicados.`;
         } else {
-            customAlert('¡Apuntes subidos y respaldados en la nube con éxito!');
+            customAlert(`¡Sincronizado con éxito! Se han fusionado los apuntes nuevos con los ya existentes en la nube (${totalSubjs} asignaturas, ${totalTopics} temas).`);
         }
     } catch (e) {
         console.error('Error al sincronizar con Supabase:', e);
         if (statusDiv) {
-            statusDiv.innerHTML = `<span style="color:var(--c-trampa); font-weight:700;">Error al subir:</span> ${sanitizeHTML(e.message)}`;
+            statusDiv.innerHTML = `<span style="color:var(--c-trampa); font-weight:700;">Error al sincronizar:</span> ${sanitizeHTML(e.message)}`;
         } else {
             customAlert('Error al conectar con la nube: ' + e.message, 'Error de Sincronización');
         }
@@ -260,7 +400,7 @@ async function pullFromCloud() {
         return;
     }
 
-    if (statusDiv) statusDiv.innerHTML = `<span style="color:var(--primary); font-weight:600;">Descargando apuntes desde la nube...</span>`;
+    if (statusDiv) statusDiv.innerHTML = `<span style="color:var(--primary); font-weight:600;">Descargando apuntes desde la nube y combinando...</span>`;
 
     try {
         const effectiveKey = await computeEffectiveSyncKey(cfg.syncId, cfg.syncPass);
@@ -289,15 +429,19 @@ async function pullFromCloud() {
             return;
         }
 
-        appDB = data[0].data;
+        // Fusión inteligente: nunca borra apuntes locales nuevos que no estuvieran en la nube
+        appDB = mergeDatabasesSafely(appDB, data[0].data);
         saveDB();
         activeSubjectId = appDB.subjects.length > 0 ? appDB.subjects[0].id : null;
         activeTopicId = (activeSubjectId && appDB.subjects[0].topics.length > 0) ? appDB.subjects[0].topics[0].id : null;
         renderDropdowns();
         if (activeTopicId) renderTopicExercises();
 
+        const totalSubjs = appDB.subjects.length;
+        const totalTopics = appDB.subjects.reduce((acc, s) => acc + (s.topics ? s.topics.length : 0), 0);
+
         if (statusDiv) {
-            statusDiv.innerHTML = `<span style="color:var(--c-truco); font-weight:700;">¡Datos sincronizados!</span> Se han actualizado tus asignaturas y temas.`;
+            statusDiv.innerHTML = `<span style="color:var(--c-truco); font-weight:700;">¡Datos fusionados con éxito!</span> Dispones de ${totalSubjs} asignaturas y ${totalTopics} temas.`;
         }
         closeModal('cloudModal');
     } catch (e) {
@@ -325,6 +469,24 @@ async function pushToCloudSilent() {
     if (!cfg.url || !cfg.key) return;
     try {
         const effectiveKey = await computeEffectiveSyncKey(cfg.syncId, cfg.syncPass);
+        let mergedDB = appDB;
+        try {
+            const checkRes = await fetch(`${cfg.url}/rest/v1/universos_sync?id=eq.${encodeURIComponent(effectiveKey)}&select=*`, {
+                method: 'GET',
+                headers: {
+                    'apikey': cfg.key,
+                    'Authorization': `Bearer ${cfg.key}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (checkRes.ok) {
+                const existingRecords = await checkRes.json();
+                if (existingRecords && existingRecords.length > 0 && existingRecords[0].data) {
+                    mergedDB = mergeDatabasesSafely(existingRecords[0].data, appDB);
+                }
+            }
+        } catch (e) {}
+
         await fetch(`${cfg.url}/rest/v1/universos_sync?on_conflict=id`, {
             method: 'POST',
             headers: {
@@ -335,7 +497,7 @@ async function pushToCloudSilent() {
             },
             body: JSON.stringify({
                 id: effectiveKey,
-                data: appDB,
+                data: mergedDB,
                 updated_at: new Date().toISOString()
             })
         });

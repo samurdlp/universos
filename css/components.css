@@ -991,18 +991,20 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
     color: #0f172a;
     background: #ffffff;
     font-family: var(--font-main);
-    font-size: 0.74rem;
-    line-height: 1.38;
+    font-size: 0.71rem;
+    line-height: 1.32;
+    column-fill: balance;
+    text-rendering: optimizeLegibility;
 }
 
 /* Evitar desbordes de fórmulas en la chuleta y escalado adaptativo */
 .cheatsheet-sheet mjx-container {
     max-width: 100% !important;
     overflow-x: hidden !important;
-    font-size: 88% !important;
+    font-size: 85% !important;
 }
 .cheatsheet-sheet mjx-container[jax="CHTML"][display="true"] {
-    margin: 3px 0 !important;
+    margin: 2px 0 !important;
     overflow-x: hidden !important;
 }
 .cheatsheet-sheet mjx-math {
@@ -1011,21 +1013,30 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
 
 .cheatsheet-sheet.cols-2 {
     column-count: 2;
-    column-gap: 14px;
+    column-gap: 12px;
     column-rule: 1px solid #e2e8f0;
 }
 
 .cheatsheet-sheet.cols-3 {
     column-count: 3;
-    column-gap: 11px;
+    column-gap: 9px;
     column-rule: 1px solid #e2e8f0;
-    font-size: 0.68rem;
-    line-height: 1.32;
+    font-size: 0.64rem;
+    line-height: 1.24;
+}
+
+.cheatsheet-sheet.cols-4 {
+    column-count: 4;
+    column-gap: 6px;
+    column-rule: 1px solid #e2e8f0;
+    font-size: 0.58rem;
+    line-height: 1.18;
 }
 
 @media (max-width: 768px) {
     .cheatsheet-preview-scroll .cheatsheet-sheet.cols-2,
-    .cheatsheet-preview-scroll .cheatsheet-sheet.cols-3 {
+    .cheatsheet-preview-scroll .cheatsheet-sheet.cols-3,
+    .cheatsheet-preview-scroll .cheatsheet-sheet.cols-4 {
         column-count: 1;
     }
 }
@@ -1033,44 +1044,47 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
 @media print {
     .cheatsheet-sheet.cols-2 {
         column-count: 2 !important;
-        column-gap: 10px !important;
+        column-gap: 9px !important;
     }
     .cheatsheet-sheet.cols-3 {
         column-count: 3 !important;
-        column-gap: 8px !important;
+        column-gap: 7px !important;
+    }
+    .cheatsheet-sheet.cols-4 {
+        column-count: 4 !important;
+        column-gap: 5px !important;
     }
 }
 
 .cs-doc-header {
     column-span: all;
-    border-bottom: 2px solid #0f172a;
-    padding-bottom: 6px;
-    margin-bottom: 10px;
+    border-bottom: 1.5px solid #0f172a;
+    padding-bottom: 3px;
+    margin-bottom: 6px;
     display: flex;
     justify-content: space-between;
     align-items: baseline;
 }
 
 .cs-doc-title {
-    font-size: 1.05rem;
+    font-size: 0.92rem;
     font-weight: 800;
     color: #0f172a;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
 }
 
 .cs-doc-meta {
-    font-size: 0.72rem;
+    font-size: 0.64rem;
     font-weight: 600;
     color: #475569;
 }
 
 .cs-block {
-    break-inside: avoid;
-    page-break-inside: avoid;
+    break-inside: auto;
     border: 1px solid #cbd5e1;
-    border-radius: 5px;
-    padding: 7px 9px;
-    margin-bottom: 8px;
+    border-radius: 4px;
+    padding: 5px 7px;
+    margin-bottom: 5px;
     background: #ffffff;
 }
 
@@ -1084,39 +1098,46 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
 }
 
 .cs-block-title {
-    font-size: 0.78rem;
+    break-inside: avoid;
+    break-after: avoid;
+    font-size: 0.74rem;
     font-weight: 800;
     color: #0f172a;
     border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 3px;
-    margin-bottom: 5px;
+    padding-bottom: 2px;
+    margin-bottom: 4px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .cs-sub-label {
-    font-size: 0.66rem;
+    break-inside: avoid;
+    break-after: avoid;
+    font-size: 0.62rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: #334155;
-    margin-top: 5px;
+    margin-top: 4px;
     margin-bottom: 2px;
 }
 
 .cs-compact-list {
     margin: 0;
-    padding-left: 12px;
+    padding-left: 10px;
 }
 .cs-compact-list li {
-    margin-bottom: 2px;
+    break-inside: avoid;
+    margin-bottom: 1.5px;
+    line-height: 1.25;
     text-align: left !important;
 }
 
 .cs-step-row {
-    margin-bottom: 4px;
-    padding-bottom: 3px;
+    break-inside: avoid;
+    margin-bottom: 3px;
+    padding-bottom: 2px;
     border-bottom: 1px dashed #e2e8f0;
 }
 .cs-step-row:last-child {
@@ -1126,26 +1147,205 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
 }
 
 .cs-alert-pill {
-    margin-top: 4px;
-    padding: 4px 6px;
-    border-radius: 4px;
+    break-inside: avoid;
+    margin-top: 3px;
+    padding: 3px 5px;
+    border-radius: 3px;
     background: #fef2f2;
     border-left: 2px solid #ef4444;
     color: #7f1d1d;
-    font-size: 0.67rem;
+    font-size: 0.64rem;
+    line-height: 1.25;
 }
 
 .cs-trick-pill {
-    margin-top: 4px;
-    padding: 4px 6px;
-    border-radius: 4px;
+    break-inside: avoid;
+    margin-top: 3px;
+    padding: 3px 5px;
+    border-radius: 3px;
     background: #ecfdf5;
     border-left: 2px solid #10b981;
     color: #064e3b;
-    font-size: 0.67rem;
+    font-size: 0.64rem;
+    line-height: 1.25;
 }
 
-/* Estilos de Buscador Global */
+/* ==========================================================================
+   MODO FLASHCARDS SRS (REPASO ESPACIADO DE ALTA GAMA)
+   ========================================================================== */
+.flashcards-modal-box {
+    max-width: 640px;
+    width: 95%;
+    display: flex;
+    flex-direction: column;
+}
+
+.flashcard-wrapper {
+    perspective: 1200px;
+    width: 100%;
+    min-height: 280px;
+    margin: 16px 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.flashcard-inner {
+    position: relative;
+    width: 100%;
+    min-height: 280px;
+    text-align: center;
+    transition: transform 0.42s cubic-bezier(0.23, 1, 0.32, 1);
+    transform-style: preserve-3d;
+}
+
+.flashcard-inner.is-flipped {
+    transform: rotateY(180deg);
+}
+
+.flashcard-face {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: 14px;
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-float);
+    overflow-y: auto;
+}
+
+.flashcard-face-back {
+    transform: rotateY(180deg);
+    background: var(--bg-body);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.flashcard-type-tag {
+    align-self: center;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--primary-bg);
+    color: var(--primary);
+}
+
+.flashcard-content-center {
+    margin: auto 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-heading);
+    line-height: 1.6;
+}
+
+.flashcard-flip-hint {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.flashcard-rating-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.flashcard-rate-btn {
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: var(--text-heading);
+}
+
+.flashcard-rate-btn.rate-hard:hover {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.flashcard-rate-btn.rate-good:hover {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.flashcard-rate-btn.rate-easy:hover {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+/* ==========================================================================
+   PANEL DE MÉTRICAS Y TELEMETRÍA DE ESTUDIO
+   ========================================================================== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.stats-card {
+    background: var(--bg-body);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+}
+
+.stats-num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-heading);
+    line-height: 1.1;
+    margin-bottom: 4px;
+}
+
+.stats-label {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.stats-bar-track {
+    width: 100%;
+    height: 10px;
+    background: var(--border-subtle);
+    border-radius: 999px;
+    overflow: hidden;
+    display: flex;
+    margin: 12px 0 6px 0;
+}
+
+.stats-bar-seg {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.stats-bar-seg.seg-mastered { background: #10b981; }
+.stats-bar-seg.seg-review { background: #f59e0b; }
+.stats-bar-seg.seg-doubt { background: #ef4444; }
+.stats-bar-seg.seg-none { background: #94a3b8; }
 .search-modal-box {
     max-width: 650px;
     width: 95%;

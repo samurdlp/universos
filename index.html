@@ -114,11 +114,15 @@
 
         <!-- Pie de Barra Lateral (Ajustes y Base de Datos) -->
         <div class="sidebar-footer">
+            <button class="footer-btn" onclick="openStatsModal()" title="Métricas y Progreso de Aprendizaje">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                <span>Métricas</span>
+            </button>
             <button class="footer-btn" onclick="openModal('dbModal')" title="Gestionar Base de Datos y Backups">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
                 <span>Base de Datos</span>
             </button>
-            <span class="footer-tag">v2.6</span>
+            <span class="footer-tag">v2.6.1</span>
         </div>
     </aside>
 
@@ -143,6 +147,10 @@
                     <span>Buscar...</span>
                     <kbd>Ctrl K</kbd>
                 </button>
+                <button class="top-nav-btn" id="flashcardsBtn" onclick="openFlashcardsModal()" title="Repaso Activo con Flashcards SRS">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                    <span>Flashcards</span>
+                </button>
                 <button class="top-nav-btn" id="cheatsheetBtn" onclick="openCheatsheetModal()" title="Generador de Chuleta Compacta del Tema">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line></svg>
                     <span>Chuleta</span>
@@ -151,10 +159,13 @@
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
                     <span>Modo Examen</span>
                 </button>
+                <button class="btn-icon" onclick="openStatsModal()" title="Métricas y Estadísticas de Estudio" aria-label="Estadísticas de estudio">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                </button>
                 <button class="btn-icon" onclick="openCloudModal()" title="Sincronización Cloud (Supabase)" aria-label="Sincronización en la nube">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
                 </button>
-                <button class="btn-icon" onclick="toggleTheme()" id="theme-btn" title="Alternar tema claro/oscuro" aria-label="Alternar tema claro u oscuro">
+                <button class="btn-icon" onclick="toggleTheme(event)" id="theme-btn" title="Alternar tema claro/oscuro" aria-label="Alternar tema claro u oscuro">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                 </button>
             </div>
@@ -410,6 +421,7 @@
                     <select id="csColsSelect" class="text-input" style="margin: 0; padding: 5px 8px; font-size: 0.78rem; width: auto;" onchange="renderCheatsheetPreview()">
                         <option value="2">2 Columnas (Estándar)</option>
                         <option value="3" selected>3 Columnas (Ultra-Compacta)</option>
+                        <option value="4">4 Columnas (Micro-Chuleta)</option>
                     </select>
                 </div>
             </div>
@@ -562,6 +574,120 @@ create policy "Acceso universos" on universos_sync for all using (true);</pre>
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeModal('cloudModal')">Cerrar</button>
                 <button class="btn btn-primary" onclick="saveCloudSettings()">Guardar Ajustes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Flashcards SRS (Repaso Espaciado Activo) -->
+    <div class="modal-overlay" id="flashcardsModal" role="dialog" aria-modal="true" aria-labelledby="flashcardsModalTitle">
+        <div class="modal flashcards-modal-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h2 id="flashcardsModalTitle" style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                    <span>Repaso Flashcards SRS</span>
+                </h2>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span id="flashcard-counter" style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">0 / 0</span>
+                    <button class="btn-icon" onclick="closeModal('flashcardsModal')" title="Cerrar Flashcards" aria-label="Cerrar modal de flashcards">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenedor de la Tarjeta Giratoria -->
+            <div class="flashcard-wrapper" id="flashcardWrapper" onclick="flipFlashcard()">
+                <div class="flashcard-inner" id="flashcardInner">
+                    <!-- Frente (Pregunta / Concepto / Identificación) -->
+                    <div class="flashcard-face flashcard-face-front">
+                        <span class="flashcard-type-tag" id="fc-type-front">Concepto Clave</span>
+                        <div class="flashcard-content-center" id="fc-front-text">Cargando flashcards...</div>
+                        <div class="flashcard-flip-hint">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                            <span>Haz clic o presiona Espacio para voltear</span>
+                        </div>
+                    </div>
+                    <!-- Reverso (Respuesta / Algoritmo / Solución) -->
+                    <div class="flashcard-face flashcard-face-back">
+                        <span class="flashcard-type-tag" id="fc-type-back" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">Respuesta / Algoritmo</span>
+                        <div class="flashcard-content-center" id="fc-back-text">...</div>
+                        <div class="flashcard-flip-hint">
+                            <span>Califica tu retención abajo para programar el próximo repaso</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Calificación SRS (Repetición Espaciada) -->
+            <div class="flashcard-rating-buttons">
+                <button class="flashcard-rate-btn rate-hard" onclick="rateFlashcard('mal')" title="No me acordaba bien">
+                    <span style="font-weight: 800;">Mal</span>
+                    <span style="font-size: 0.7rem; opacity: 0.8;">Repetir pronto</span>
+                </button>
+                <button class="flashcard-rate-btn rate-good" onclick="rateFlashcard('regular')" title="Me ha costado o recordaba parte">
+                    <span style="font-weight: 800;">Regular</span>
+                    <span style="font-size: 0.7rem; opacity: 0.8;">Repasar luego</span>
+                </button>
+                <button class="flashcard-rate-btn rate-easy" onclick="rateFlashcard('perfecto')" title="Lo dominaba con soltura">
+                    <span style="font-weight: 800;">Perfecto</span>
+                    <span style="font-size: 0.7rem; opacity: 0.8;">Dominado</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Métricas y Telemetría de Estudio -->
+    <div class="modal-overlay" id="statsModal" role="dialog" aria-modal="true" aria-labelledby="statsModalTitle">
+        <div class="modal" style="max-width: 580px; width: 95%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 id="statsModalTitle" style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Métricas y Telemetría de Estudio</span>
+                </h2>
+                <button class="btn-icon" onclick="closeModal('statsModal')" title="Cerrar Métricas" aria-label="Cerrar modal de métricas">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stats-card">
+                    <div class="stats-num" id="stat-total-subjects">0</div>
+                    <div class="stats-label">Asignaturas</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-num" id="stat-total-topics">0</div>
+                    <div class="stats-label">Temas</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-num" id="stat-total-exercises">0</div>
+                    <div class="stats-label">Ejercicios</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-num" id="stat-total-theory">0</div>
+                    <div class="stats-label">Puntos Teóricos</div>
+                </div>
+            </div>
+
+            <div style="background: var(--bg-body); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; margin-bottom: 4px;">
+                    <span>Distribución de Dominio de Ejercicios</span>
+                    <span id="stat-mastery-percentage" style="color: var(--primary);">0% Dominado</span>
+                </div>
+                <div class="stats-bar-track">
+                    <div class="stats-bar-seg seg-mastered" id="bar-mastered" style="width: 0%;" title="Perfecto"></div>
+                    <div class="stats-bar-seg seg-review" id="bar-review" style="width: 0%;" title="Regular"></div>
+                    <div class="stats-bar-seg seg-doubt" id="bar-doubt" style="width: 0%;" title="Mal"></div>
+                    <div class="stats-bar-seg seg-none" id="bar-none" style="width: 100%;" title="Sin Calificar"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; flex-wrap: wrap; gap: 8px;">
+                    <span style="display: flex; align-items: center; gap: 4px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981;"></span> Perfecto: <strong id="lbl-mastered">0</strong></span>
+                    <span style="display: flex; align-items: center; gap: 4px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f59e0b;"></span> Regular: <strong id="lbl-review">0</strong></span>
+                    <span style="display: flex; align-items: center; gap: 4px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444;"></span> Mal: <strong id="lbl-doubt">0</strong></span>
+                    <span style="display: flex; align-items: center; gap: 4px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#94a3b8;"></span> Pendiente: <strong id="lbl-none">0</strong></span>
+                </div>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 10px;">
+                <button class="btn btn-primary" style="width: 100%;" onclick="closeModal('statsModal')">Cerrar</button>
             </div>
         </div>
     </div>

@@ -771,4 +771,12 @@ mjx-container::-webkit-scrollbar-thumb {
         border: none !important;
         background: #ffffff !important;
     }
+
+    body.printing-cheatsheet .cheatsheet-sheet {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        column-fill: balance !important;
+    }
 }
