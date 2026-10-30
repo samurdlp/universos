@@ -294,37 +294,52 @@ function highlightAndScrollToQuery(query) {
     const container = document.getElementById('exercise-content');
     if (!container || !query) return;
 
-    // Buscar elementos dentro del contenedor que contengan el texto
-    const textNodes = [];
+    // Quitar cualquier resaltado temporal previo
+    container.querySelectorAll('mark.search-target-highlight').forEach(m => {
+        m.replaceWith(...m.childNodes);
+    });
+
+    const qLower = query.toLowerCase();
     const walk = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+    let targetNode = null;
+    let matchIdx = -1;
     let n;
-    while (n = walk.nextNode()) {
-        if (n.parentElement && !['SCRIPT', 'STYLE', 'MARK'].includes(n.parentElement.tagName)) {
-            if (n.nodeValue.toLowerCase().includes(query.toLowerCase())) {
-                textNodes.push(n);
+    while ((n = walk.nextNode())) {
+        if (n.parentElement && !['SCRIPT', 'STYLE', 'MARK', 'CODE'].includes(n.parentElement.tagName) && !n.parentElement.closest('mjx-container')) {
+            const idx = n.nodeValue.toLowerCase().indexOf(qLower);
+            if (idx !== -1) {
+                targetNode = n;
+                matchIdx = idx;
+                break;
             }
         }
     }
 
-    if (textNodes.length > 0) {
-        const targetNode = textNodes[0];
-        const parent = targetNode.parentElement;
-        if (parent) {
-            // Envolver la coincidencia en un elemento resaltado temporal
-            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-            parent.innerHTML = parent.innerHTML.replace(regex, '<mark class="search-target-highlight">$1</mark>');
-            
-            const hlEl = parent.querySelector('.search-target-highlight');
-            if (hlEl) {
-                hlEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Quitar el destello después de 3.5 segundos
+    if (targetNode && matchIdx !== -1) {
+        try {
+            // Manipulación segura del nodo de texto sin alterar innerHTML ni desincronizar MathJax
+            const matchText = targetNode.nodeValue.substring(matchIdx, matchIdx + query.length);
+            const afterText = targetNode.splitText(matchIdx);
+            afterText.splitText(query.length);
+
+            const mark = document.createElement('mark');
+            mark.className = 'search-target-highlight';
+            mark.textContent = matchText;
+
+            afterText.parentNode.replaceChild(mark, afterText);
+            mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Desvanecer y retirar tras 3.5 segundos
+            setTimeout(() => {
+                mark.classList.add('fade-out');
                 setTimeout(() => {
-                    hlEl.classList.add('fade-out');
-                    setTimeout(() => {
-                        hlEl.replaceWith(...hlEl.childNodes);
-                    }, 500);
-                }, 3500);
-            }
+                    if (mark.parentNode) {
+                        mark.replaceWith(...mark.childNodes);
+                    }
+                }, 500);
+            }, 3500);
+        } catch (e) {
+            console.warn('Highlight search warning:', e);
         }
     }
 }

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="100%" stop-color="#05070c" />
+    </linearGradient>
+    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa" />
+      <stop offset="50%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" stroke="#1e293b" stroke-width="4" />
+  
+  <!-- Subtle Ambient Glow -->
+  <circle cx="256" cy="240" r="140" fill="#3b82f6" opacity="0.12" filter="url(#glow)" />
+
+  <!-- University Cap / Geometric Peak -->
+  <path d="M 256 120 L 416 195 L 256 270 L 96 195 Z" fill="url(#primaryGrad)" filter="url(#glow)" />
+  <path d="M 256 120 L 416 195 L 256 270 L 96 195 Z" fill="none" stroke="#93c5fd" stroke-width="3" opacity="0.8" />
+
+  <!-- Cap Underbelly Depth -->
+  <path d="M 160 225 L 160 295 C 160 340 352 340 352 295 L 352 225" fill="none" stroke="url(#accentGrad)" stroke-width="16" stroke-linecap="round" />
+
+  <!-- Academic Tassel Ribbon -->
+  <path d="M 400 200 L 420 280 L 430 320" fill="none" stroke="#38bdf8" stroke-width="8" stroke-linecap="round" />
+  <circle cx="430" cy="330" r="10" fill="#38bdf8" />
+
+  <!-- Open Study Core / Algorithmic Pages -->
+  <g transform="translate(0, 30)">
+    <!-- Left Page -->
+    <path d="M 256 380 C 220 365 160 365 120 375 L 120 425 C 160 415 220 415 256 430 Z" fill="#1e293b" stroke="#3b82f6" stroke-width="6" stroke-linejoin="round" />
+    <!-- Right Page -->
+    <path d="M 256 380 C 292 365 352 365 392 375 L 392 425 C 352 415 292 415 256 430 Z" fill="#1e293b" stroke="#3b82f6" stroke-width="6" stroke-linejoin="round" />
+    <!-- Spine Line -->
+    <line x1="256" y1="380" x2="256" y2="430" stroke="#60a5fa" stroke-width="8" stroke-linecap="round" />
+  </g>
+
+  <!-- Central Star of Knowledge -->
+  <circle cx="256" cy="195" r="10" fill="#ffffff" filter="url(#glow)" />
+</svg>

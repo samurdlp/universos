@@ -122,6 +122,9 @@ function updateBreadcrumbs() {
 }
 
 function selectSubject(id) {
+    if (typeof stopExamTimer === 'function') {
+        stopExamTimer();
+    }
     activeSubjectId = id; 
     activeTopicId = null;
     localStorage.setItem(ACTIVE_SUBJ_KEY, id);

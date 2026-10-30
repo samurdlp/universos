@@ -43,6 +43,20 @@ window.addEventListener('resize', () => {
     }
 });
 
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => {
+                    console.log('UniverSOS PWA Service Worker activo:', reg.scope);
+                })
+                .catch(err => {
+                    console.warn('Registro de Service Worker:', err);
+                });
+        });
+    }
+}
+
 function initApp() {
     loadDB();
     if (!isMobileOrLandscapeDrawer() && localStorage.getItem('universos_sidebar_collapsed') === 'true') {
@@ -60,6 +74,7 @@ function initApp() {
     if (typeof checkUrlCloudMagicConfig === 'function') {
         checkUrlCloudMagicConfig();
     }
+    registerServiceWorker();
 }
 
 window.addEventListener('DOMContentLoaded', () => {

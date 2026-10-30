@@ -116,7 +116,9 @@ function initModalListeners() {
             const isTextarea = focused && focused.tagName === 'TEXTAREA';
 
             if (isTextarea) {
-                if (e.shiftKey) return;
+                // En un textarea, Enter normal debe insertar un salto de línea.
+                // Solo enviar el modal si se pulsa Ctrl+Enter o Cmd+Enter.
+                if (!e.ctrlKey && !e.metaKey) return;
             } else {
                 if (e.shiftKey) return;
             }

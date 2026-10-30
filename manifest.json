@@ -1,0 +1,21 @@
+{
+  "name": "UniverSOS — Gestor de Estudio Universitario",
+  "short_name": "UniverSOS",
+  "description": "Gestor Integral de Estudio Universitario, Algoritmos Paso a Paso y Chuletas de Alta Densidad",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#070709",
+  "theme_color": "#070709",
+  "lang": "es",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

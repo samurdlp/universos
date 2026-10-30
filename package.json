@@ -1,0 +1,19 @@
+{
+  "name": "universos",
+  "version": "2.6.0",
+  "description": "Gestor Integral de Estudio Universitario STEM, Algoritmos Paso a Paso y Chuletas de Alta Densidad",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run-tests.mjs"
+  },
+  "keywords": [
+    "education",
+    "mathjax",
+    "latex",
+    "algorithms",
+    "study",
+    "university"
+  ],
+  "author": "samurdlp",
+  "license": "MIT"
+}
