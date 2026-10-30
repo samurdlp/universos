@@ -38,9 +38,10 @@
 
 | Módulo / Funcionalidad | Estado | Detalles Técnicos |
 | :--- | :--- | :--- |
-| **Generador de Exámenes Imprimibles A4** | `Completo` | Modal `#examGenModal` y visor `#examPreviewModal`. Baremo exacto sobre 10.00 pts, rejilla milimétrica de desarrollo, solucionario detallado y aislamiento `@media print`. |
+| **Barra Superior Ergonómica (Top Nav)** | `Completo` | Menú desplegable unificado `#examToolsMenu` que consolida Simulador, Simulacro A4 y Chuleta en un solo punto de acceso, reduciendo la saturación visual de 5 botones repetitivos a 3 acciones primarias (`Flashcards`, `Práctica y Exámenes`, `Mapa Temas`). |
+| **Generador de Exámenes Imprimibles A4** | `Completo` | Modal `#examGenModal` y visor `#examPreviewModal`. Baremo exacto sobre 10.00 pts, cuadrícula milimétrica de desarrollo (350px), tipografía clásica serif de examen universitario (Computer Modern/Georgia), márgenes amplios de 42px entre problemas y solucionario oficial. |
 | **Algoritmo SM-2 & Repaso Diario** | `Completo` | Motor `js/sm2.js`, proyección de intervalos (1d/6d/16d), filtro `sm2due` en configuración de sesión, badge numérico en top-nav y persistencia en `localStorage`. |
-| **Árbol de Habilidades / Grafo SVG** | `Completo` | Modal `#skillTreeModal`, renderizado SVG responsivo sin dependencias, conectores con curvas Bézier, indicador global de dominio y panel de acciones directas. |
+| **Árbol de Habilidades / Mapa Conceptual** | `Completo` | Modal `#skillTreeModal`, roadmap visual fluido en lista de flujo pedagógico continuo, compatible con Dark Mode, tarjetas editoriales con nombres completos sin truncar, filtros por estado y panel de detalle con desglose de checklist teórico. |
 | **Flashcards SRS & Registro Autónomo** | `Completo` | Menú inicial de decisión (ámbito, cantidad 5/10/15/20/todas y dificultad), mazo adaptativo sin scroll (`overflow: hidden`), clara diferenciación visual Enunciado vs Pregunta, renderizado TeX MathJax completo, persistencia automática en `localStorage` (`universos_flashcards_history`) y vista de métricas. |
 | **Aislamiento Limpio de Impresión** | `Completo` | Supresión de selectores de tema/ejercicios (`.cheatsheet-item-selector`) y filtros de dominio en `@media print`. Salida de impresión 100% limpia. |
 | **Fusión Cloud No Destructiva** | `Completo` | `mergeDatabasesSafely()` en `cloud-sync.js`. Previene borrados accidentales de temas remotos al subir desde nuevas pestañas o dispositivos. |

@@ -1442,34 +1442,34 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
     height: 100%;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    border-radius: 16px;
-    padding: 20px 22px;
+    border-radius: 14px;
+    padding: 24px 28px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: stretch;
-    background: linear-gradient(145deg, var(--bg-card), var(--bg-body));
-    border: 1px solid var(--border-subtle);
-    box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
     overflow: hidden;
-    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .flashcard-face:hover {
-    border-color: rgba(59, 130, 246, 0.4);
-    box-shadow: 0 14px 40px -10px rgba(0, 0, 0, 0.18);
+    border-color: var(--primary);
+    box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.14);
 }
 
 .flashcard-face-back {
     transform: rotateY(180deg);
-    background: linear-gradient(145deg, var(--bg-card), rgba(59, 130, 246, 0.04));
-    border-color: rgba(59, 130, 246, 0.35);
+    background: var(--bg-card);
+    border-color: var(--border-color);
 }
 
 .flashcard-face mjx-container {
     max-width: 100% !important;
     overflow-x: hidden !important;
-    font-size: 90% !important;
+    font-size: 92% !important;
     margin: 2px 0 !important;
     display: inline-block !important;
 }
@@ -1479,27 +1479,27 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 8px;
+    gap: 12px;
     overflow: hidden;
-    padding: 4px 0;
+    padding: 6px 0;
 }
 
-/* Distinción clara: Caja de Enunciado vs Caja de Pregunta */
+/* Distinción clara: Contexto del Problema vs Pregunta de Examen */
 .fc-context-card {
     background: var(--bg-body);
     border: 1px solid var(--border-subtle);
-    border-radius: 9px;
-    padding: 8px 12px;
+    border-left: 3px solid var(--primary);
+    border-radius: 8px;
+    padding: 8px 14px;
     text-align: left;
     width: 100%;
-    border-left: 3px solid var(--primary);
 }
 
 .fc-context-tag {
-    font-size: 0.66rem;
+    font-size: 0.65rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     color: var(--primary);
     display: flex;
     align-items: center;
@@ -1508,17 +1508,16 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
 }
 
 .fc-context-text {
-    font-size: 0.86rem;
+    font-size: 0.84rem;
     font-weight: 600;
-    color: var(--text-body);
-    line-height: 1.4;
+    color: var(--text-muted);
+    line-height: 1.45;
 }
 
 .fc-question-card {
-    background: rgba(59, 130, 246, 0.06);
-    border: 1.5px solid rgba(59, 130, 246, 0.3);
-    border-radius: 11px;
-    padding: 12px 14px;
+    background: transparent;
+    border: none;
+    padding: 6px 0;
     text-align: left;
     width: 100%;
 }
@@ -1527,26 +1526,26 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
     font-size: 0.68rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--primary);
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     gap: 5px;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .fc-question-text {
-    font-size: 0.98rem;
+    font-size: 1.15rem;
     font-weight: 800;
     color: var(--text-heading);
-    line-height: 1.45;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
 }
 
 .fc-solution-card {
-    background: rgba(16, 185, 129, 0.05);
-    border: 1.5px solid rgba(16, 185, 129, 0.3);
-    border-radius: 11px;
-    padding: 12px 14px;
+    background: transparent;
+    border: none;
+    padding: 6px 0;
     text-align: left;
     width: 100%;
 }
@@ -1555,7 +1554,7 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
     font-size: 0.68rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     color: #10b981;
     display: flex;
     align-items: center;
@@ -1564,88 +1563,66 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
 }
 
 .fc-solution-text {
-    font-size: 0.90rem;
-    color: var(--text-heading);
-    line-height: 1.5;
+    font-size: 0.95rem;
+    color: var(--text-body);
+    line-height: 1.6;
 }
 
 .fc-formula-box {
-    background: var(--step-content-bg);
+    background: var(--bg-body);
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
-    padding: 6px 10px;
-    margin-top: 6px;
-    font-size: 0.86rem;
+    padding: 8px 12px;
+    margin-top: 8px;
+    font-size: 0.88rem;
     text-align: left;
 }
 
 .fc-topic-crumb {
     font-size: 0.72rem;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 2px;
+    letter-spacing: 0.06em;
 }
 
 .flashcard-type-tag {
-    align-self: center;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    padding: 3px 12px;
+    padding: 3px 10px;
     border-radius: 999px;
-    background: var(--primary-bg);
-    color: var(--primary);
-}
-
-.flashcard-content-center {
-    margin: auto 0;
-    font-size: clamp(0.92rem, 1.6vw, 1.05rem);
-    font-weight: 600;
-    color: var(--text-heading);
-    line-height: 1.5;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 4px;
-}
-
-.flashcard-content-center code {
-    background: var(--step-content-bg);
+    background: var(--bg-alt);
     border: 1px solid var(--border-subtle);
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-size: 0.85em;
-    font-family: var(--font-mono);
+    color: var(--text-heading);
 }
 
 .flashcard-flip-hint {
-    font-size: 0.73rem;
+    font-size: 0.72rem;
     color: var(--text-muted);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 10px;
+    margin-top: auto;
 }
 
 .flashcard-rating-buttons {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-top: 4px;
+    gap: 12px;
+    margin-top: 6px;
 }
 
 .flashcard-rate-btn {
-    padding: 9px 12px;
-    border-radius: 8px;
-    font-size: 0.8rem;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.82rem;
     font-weight: 700;
-    border: 1px solid var(--border-subtle);
+    border: 1px solid var(--border-color);
     background: var(--bg-card);
     cursor: pointer;
     display: flex;
@@ -1653,29 +1630,29 @@ body.dark .acc-detalles .accordion-header { color: #818cf8; }
     align-items: center;
     gap: 2px;
     color: var(--text-heading);
-    transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .flashcard-rate-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .flashcard-rate-btn.rate-hard:hover {
     border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 68, 68, 0.08);
     color: #ef4444;
 }
 
 .flashcard-rate-btn.rate-good:hover {
     border-color: #f59e0b;
-    background: rgba(245, 158, 11, 0.1);
+    background: rgba(245, 158, 11, 0.08);
     color: #f59e0b;
 }
 
 .flashcard-rate-btn.rate-easy:hover {
     border-color: #10b981;
-    background: rgba(16, 185, 129, 0.1);
+    background: rgba(16, 185, 129, 0.08);
     color: #10b981;
 }
 
@@ -2035,17 +2012,18 @@ mark.search-target-highlight.fade-out {
 .exam-a4-sheet {
     background: #ffffff;
     color: #0f172a;
-    padding: 24px;
+    padding: 36px 42px;
     border-radius: 4px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    line-height: 1.5;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    font-family: "Latin Modern Roman", "Computer Modern Serif", "CMU Serif", "Times New Roman", Times, "Nimbus Roman No9 L", Georgia, serif !important;
+    font-size: 9pt !important;
+    line-height: 1.55 !important;
 }
 
 .exam-a4-header {
     border-bottom: 2px solid #0f172a;
-    padding-bottom: 14px;
-    margin-bottom: 18px;
+    padding-bottom: 12px;
+    margin-bottom: 24px;
 }
 
 .exam-header-top {
@@ -2056,7 +2034,7 @@ mark.search-target-highlight.fade-out {
 }
 
 .exam-univ-badge {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     color: #475569;
@@ -2065,35 +2043,36 @@ mark.search-target-highlight.fade-out {
 
 .exam-subject-title {
     margin: 2px 0 4px;
-    font-size: 1.5rem;
-    font-weight: 900;
+    font-size: 1.35rem;
+    font-weight: 800;
     color: #0f172a;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
+    font-family: inherit;
 }
 
 .exam-meta-line {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: #475569;
 }
 
 .exam-grade-box {
-    border: 2px solid #0f172a;
-    border-radius: 6px;
-    padding: 6px 14px;
+    border: 1.5px solid #0f172a;
+    border-radius: 4px;
+    padding: 5px 12px;
     text-align: center;
     background: #f8fafc;
-    min-width: 110px;
+    min-width: 105px;
 }
 
 .exam-grade-title {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     font-weight: 800;
     letter-spacing: 0.05em;
     color: #475569;
 }
 
 .exam-grade-score {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     font-weight: 900;
     color: #0f172a;
     font-family: var(--font-mono);
@@ -2102,7 +2081,7 @@ mark.search-target-highlight.fade-out {
 .exam-student-fields {
     display: flex;
     gap: 14px;
-    margin: 14px 0 10px;
+    margin: 12px 0 8px;
     flex-wrap: wrap;
 }
 
@@ -2115,7 +2094,7 @@ mark.search-target-highlight.fade-out {
 }
 
 .exam-field-label {
-    font-size: 0.76rem;
+    font-size: 0.74rem;
     font-weight: 700;
     color: #334155;
     white-space: nowrap;
@@ -2130,15 +2109,15 @@ mark.search-target-highlight.fade-out {
 .exam-breakdown-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 10px 0 12px;
-    font-size: 0.78rem;
+    margin: 8px 0 10px;
+    font-size: 0.74rem;
     text-align: center;
 }
 
 .exam-breakdown-table th,
 .exam-breakdown-table td {
     border: 1px solid #94a3b8;
-    padding: 4px 6px;
+    padding: 3px 5px;
 }
 
 .exam-breakdown-table th {
@@ -2154,26 +2133,27 @@ mark.search-target-highlight.fade-out {
 }
 
 .exam-tr-nota td {
-    height: 24px;
+    height: 22px;
 }
 
 .exam-instructions-box {
     background: #f8fafc;
     border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    padding: 8px 12px;
-    font-size: 0.72rem;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 0.7rem;
     color: #334155;
 }
 
 .exam-instructions-box ol {
-    margin: 4px 0 0;
-    padding-left: 18px;
-    line-height: 1.45;
+    margin: 3px 0 0;
+    padding-left: 16px;
+    line-height: 1.4;
 }
 
+/* Problemas del Examen: Márgenes generosos y tipografía académica */
 .exam-problem-block {
-    margin-bottom: 24px;
+    margin-bottom: 42px;
     page-break-inside: avoid;
     break-inside: avoid;
 }
@@ -2181,29 +2161,31 @@ mark.search-target-highlight.fade-out {
 .exam-prob-header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 4px;
 }
 
 .exam-prob-badge {
     background: #0f172a;
     color: #ffffff;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 800;
-    padding: 2px 8px;
-    border-radius: 4px;
+    padding: 2px 7px;
+    border-radius: 3px;
     letter-spacing: 0.05em;
 }
 
 .exam-prob-pts {
-    font-size: 0.78rem;
+    font-size: 0.76rem;
+    font-weight: 700;
     color: #0f172a;
 }
 
 .exam-prob-topic {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: #64748b;
     margin-left: auto;
+    font-style: italic;
 }
 
 .exam-prob-title {
@@ -2211,19 +2193,21 @@ mark.search-target-highlight.fade-out {
     font-size: 1.05rem;
     font-weight: 800;
     color: #0f172a;
+    font-family: inherit;
 }
 
 .exam-prob-statement {
     font-size: 0.88rem;
     line-height: 1.6;
     color: #1e293b;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+    text-align: justify;
 }
 
-/* Espacio pautado con rejilla milimétrica suave de examen */
+/* Espacio pautado con rejilla milimétrica suave y generosa para cálculo */
 .exam-draft-grid-box {
     width: 100%;
-    height: 310px;
+    height: 350px;
     border: 1px solid #cbd5e1;
     border-radius: 4px;
     background-color: #ffffff;
@@ -2248,8 +2232,8 @@ mark.search-target-highlight.fade-out {
 
 /* Solucionario de Corrección */
 .exam-solutions-section {
-    margin-top: 30px;
-    padding-top: 20px;
+    margin-top: 36px;
+    padding-top: 24px;
     border-top: 2px dashed #94a3b8;
     page-break-before: always;
     break-before: page;
@@ -2275,7 +2259,7 @@ mark.search-target-highlight.fade-out {
     border: 1px solid #cbd5e1;
     border-radius: 6px;
     padding: 12px 14px;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
     font-size: 0.82rem;
 }
 
@@ -2288,6 +2272,7 @@ mark.search-target-highlight.fade-out {
     margin-bottom: 8px;
     font-size: 0.95rem;
     color: #0f172a;
+    font-family: inherit;
 }
 
 .exam-sol-pts-tag {
@@ -2310,16 +2295,234 @@ mark.search-target-highlight.fade-out {
 }
 
 /* ==========================================================================
-   ESTILOS DE ALTA GAMA: ÁRBOL DE HABILIDADES Y MAPA DE DEPENDENCIAS
+   ESTILOS DE ALTA GAMA: ÁRBOL DE HABILIDADES Y MAPA CONCEPTUAL
    ========================================================================== */
 
-.skill-tree-node rect {
-    transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+.skill-tree-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
-.skill-tree-node:hover rect {
-    stroke-width: 3.2;
-    filter: drop-shadow(0 8px 16px rgba(0,0,0,0.12));
+.skill-tree-filter-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.skill-filter-chip {
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    border: 1px solid var(--border-color);
+    background: var(--bg-body);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.skill-filter-chip:hover {
+    border-color: var(--primary);
+    color: var(--text-heading);
+}
+
+.skill-filter-chip.active {
+    background: var(--primary-bg);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.skill-tree-legend {
+    display: flex;
+    gap: 12px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    align-items: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot-mastered { background: #10b981; }
+.dot-progress { background: #f59e0b; }
+.dot-pending { background: #94a3b8; }
+
+/* Lista de flujo continuo */
+.skill-tree-flow-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 8px 4px;
+}
+
+.skill-flow-step {
+    display: flex;
+    align-items: stretch;
+    gap: 16px;
+    position: relative;
+    cursor: pointer;
+}
+
+.skill-step-stem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 38px;
+    flex-shrink: 0;
+}
+
+.skill-step-marker {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 800;
+    border: 2px solid;
+    background: var(--bg-card);
+    z-index: 2;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.skill-flow-step:hover .skill-step-marker {
+    transform: scale(1.12);
+}
+
+.skill-step-line {
+    width: 2px;
+    flex: 1;
+    background: var(--border-color);
+    margin: 4px 0;
+}
+
+.skill-topic-card {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.skill-flow-step.is-selected .skill-topic-card,
+.skill-topic-card:hover {
+    border-color: var(--primary);
+    transform: translateX(4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.skill-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.skill-topic-num {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.skill-topic-name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-heading);
+    line-height: 1.35;
+}
+
+.skill-card-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-mastered {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: #10b981;
+    color: #059669;
+}
+
+.status-progress {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: #f59e0b;
+    color: #d97706;
+}
+
+.status-pending {
+    background: var(--bg-alt);
+    border-color: #94a3b8;
+    color: var(--text-muted);
+}
+
+.skill-card-progress-bar-wrap {
+    width: 100%;
+    height: 5px;
+    background: var(--border-subtle);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 6px 0 10px;
+}
+
+.skill-card-progress-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.skill-card-meta-grid {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.skill-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--bg-body);
+    border: 1px solid var(--border-subtle);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.74rem;
+    color: var(--text-muted);
+}
+
+.skill-meta-pill strong {
+    color: var(--text-heading);
 }
 
 .skill-detail-card {
@@ -2328,11 +2531,156 @@ mark.search-target-highlight.fade-out {
     height: 100%;
 }
 
-.skill-metric-pill {
-    transition: transform 0.2s ease;
+.skill-detail-checklist {
+    margin: 4px 0 0;
+    padding-left: 18px;
+    font-size: 0.78rem;
+    color: var(--text-body);
+    line-height: 1.5;
 }
 
-.skill-metric-pill:hover {
-    transform: translateY(-2px);
+.status-badge-inline {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
+/* ==========================================================================
+   ESTILOS DE ALTA GAMA: MENÚ DE NAVEGACIÓN Y DROPDOWN REORGANIZADO
+   ========================================================================== */
+
+.top-nav-btn-highlight {
+    background: var(--primary-bg) !important;
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+    font-weight: 700 !important;
+}
+
+.badge-due {
+    margin-left: 5px;
+    padding: 1px 6px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    background: #ef4444;
+    color: #ffffff;
+    border-radius: 999px;
+}
+
+.nav-dropdown-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.nav-dropdown-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.dropdown-chevron {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-dropdown-wrapper.is-open .dropdown-chevron {
+    transform: rotate(180deg);
+}
+
+.nav-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 290px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    padding: 6px;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 100;
+    animation: dropdownFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-dropdown-wrapper.is-open .nav-dropdown-menu {
+    display: flex;
+}
+
+@keyframes dropdownFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.nav-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-body);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+    width: 100%;
+}
+
+.nav-dropdown-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-heading);
+}
+
+.nav-dropdown-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.nav-dropdown-icon.icon-sim {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+}
+
+.nav-dropdown-icon.icon-print {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+}
+
+.nav-dropdown-icon.icon-cheat {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+}
+
+.nav-dropdown-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.nav-dropdown-text strong {
+    font-size: 0.82rem;
+    color: var(--text-heading);
+}
+
+.nav-dropdown-text small {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.nav-util-cluster {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
 }
 

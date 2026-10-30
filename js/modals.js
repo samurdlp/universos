@@ -131,4 +131,43 @@ function initModalListeners() {
             }
         }
     });
+
+    // Cerrar menús desplegables de navegación al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.nav-dropdown-wrapper')) {
+            closeAllNavDropdowns();
+        }
+    });
+}
+
+function toggleExamDropdown(event) {
+    if (event) event.stopPropagation();
+    const wrapper = document.getElementById('examToolsDropdownWrapper');
+    if (!wrapper) return;
+    const isOpen = wrapper.classList.contains('is-open');
+    closeAllNavDropdowns();
+    if (!isOpen) {
+        wrapper.classList.add('is-open');
+        const trigger = wrapper.querySelector('.nav-dropdown-trigger');
+        if (trigger) trigger.setAttribute('aria-expanded', 'true');
+    }
+}
+
+function closeAllNavDropdowns() {
+    document.querySelectorAll('.nav-dropdown-wrapper.is-open').forEach(w => {
+        w.classList.remove('is-open');
+        const trigger = w.querySelector('.nav-dropdown-trigger');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
+}
+
+function selectExamDropdownAction(action) {
+    closeAllNavDropdowns();
+    if (action === 'examMode') {
+        if (typeof toggleExamMode === 'function') toggleExamMode();
+    } else if (action === 'examGen') {
+        if (typeof openExamGeneratorModal === 'function') openExamGeneratorModal();
+    } else if (action === 'cheatsheet') {
+        if (typeof openCheatsheetModal === 'function') openCheatsheetModal();
+    }
 }

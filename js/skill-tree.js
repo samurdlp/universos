@@ -1,10 +1,11 @@
 /**
- * UniverSOS — Árbol de Habilidades y Grafo de Dependencias de la Asignatura
- * Renderiza un mapa conceptual interactivo en SVG nativo mostrando el progreso,
- * estado de dominio y flujo pedagógico de los temas de la asignatura.
+ * UniverSOS — Árbol de Habilidades y Mapa Conceptual de la Asignatura
+ * Visualización moderna, fluida y legible del avance pedagógico y dominio
+ * de cada tema con soporte íntegro para temas claros/oscuros y filtros dinámicos.
  */
 
 var selectedSkillTopicId = null;
+var skillTreeCurrentFilter = 'all';
 
 /**
  * Abre el modal del árbol de habilidades para la asignatura activa.
@@ -12,7 +13,7 @@ var selectedSkillTopicId = null;
 function openSkillTreeModal() {
     const subjects = (appDB && Array.isArray(appDB.subjects)) ? appDB.subjects : [];
     if (subjects.length === 0) {
-        customAlert('No tienes asignaturas registradas para visualizar el árbol de habilidades.', 'Mapa de Asignatura');
+        customAlert('No tienes asignaturas registradas para visualizar el mapa de temas.', 'Mapa de Asignatura');
         return;
     }
 
@@ -21,7 +22,7 @@ function openSkillTreeModal() {
 
     const topics = activeSubj.topics || [];
     if (topics.length === 0) {
-        customAlert('Esta asignatura no tiene temas creados todavía. Añade temas para generar el árbol de dependencias.', 'Sin Temas');
+        customAlert('Esta asignatura no tiene temas creados todavía. Añade temas para generar el mapa conceptual.', 'Sin Temas');
         return;
     }
 
@@ -34,7 +35,7 @@ function openSkillTreeModal() {
  */
 function calculateTopicMastery(topic, subject) {
     if (!topic || !topic.data) {
-        return { percent: 0, status: 'pending', totalEx: 0, masteredEx: 0, totalFc: 0, masteredFc: 0 };
+        return { percent: 0, status: 'pending', totalEx: 0, masteredEx: 0, totalFc: 0, masteredFc: 0, checklistCount: 0 };
     }
 
     const exercises = Array.isArray(topic.data.ejercicios) ? topic.data.ejercicios : [];
@@ -47,12 +48,14 @@ function calculateTopicMastery(topic, subject) {
         else if (ex.dominio === 'doubt') doubtEx++;
     });
 
+    const checklist = (topic.data.teoria && Array.isArray(topic.data.teoria.checklistClave)) ? topic.data.teoria.checklistClave : [];
+    const checklistCount = checklist.length;
+
     // Métricas cruzadas desde el historial de flashcards
     const history = typeof getFlashcardHistory === 'function' ? getFlashcardHistory() : {};
     let totalFc = 0;
     let masteredFc = 0;
 
-    // Buscar tarjetas pertenecientes a este tema
     Object.keys(history).forEach(cardId => {
         const item = history[cardId];
         if (item && item.topicName && item.topicName.trim().toLowerCase() === (topic.name || '').trim().toLowerCase()) {
@@ -80,15 +83,16 @@ function calculateTopicMastery(topic, subject) {
     else if (percent >= 25 || doubtEx > 0) status = 'progress';
     else status = 'pending';
 
-    return { percent, status, totalEx, masteredEx, totalFc, masteredFc };
+    return { percent, status, totalEx, masteredEx, totalFc, masteredFc, checklistCount };
 }
 
 /**
- * Renderiza el árbol y genera el SVG interactivo.
+ * Renderiza el mapa conceptual de temas con diseño fluido, tipografía clara
+ * y soporte completo para modo claro/oscuro.
  */
 function renderSkillTreeGraph(subject) {
     const titleEl = document.getElementById('skillTreeSubjectTitle');
-    const svgContainer = document.getElementById('skillTreeSvgContainer');
+    const container = document.getElementById('skillTreeSvgContainer');
     const globalPercentEl = document.getElementById('skillTreeGlobalProgress');
     const globalBarEl = document.getElementById('skillTreeProgressBar');
 
@@ -97,136 +101,150 @@ function renderSkillTreeGraph(subject) {
     const topics = subject.topics || [];
     if (topics.length === 0) return;
 
-    // Calcular estadísticas globales de la asignatura
+    // Calcular estadísticas globales
     let totalPoints = 0;
-    let topicStats = [];
-    topics.forEach((t, idx) => {
+    let countMastered = 0;
+    let countProgress = 0;
+    let countPending = 0;
+
+    const topicStats = topics.map((t, idx) => {
         const stats = calculateTopicMastery(t, subject);
-        topicStats.push({ topic: t, index: idx + 1, ...stats });
         totalPoints += stats.percent;
+        if (stats.status === 'mastered') countMastered++;
+        else if (stats.status === 'progress') countProgress++;
+        else countPending++;
+        return { topic: t, index: idx + 1, ...stats };
     });
 
     const globalAverage = Math.round(totalPoints / topics.length);
     if (globalPercentEl) globalPercentEl.innerText = `${globalAverage}%`;
     if (globalBarEl) globalBarEl.style.width = `${globalAverage}%`;
 
-    // Disposición visual espacial en SVG (Layout de Grafo en Serpiente / Cuadrícula Dinámica)
-    const nodeWidth = 260;
-    const nodeHeight = 90;
-    const gapX = 80;
-    const gapY = 70;
-    const columns = Math.min(3, Math.max(1, Math.floor(880 / (nodeWidth + gapX))));
+    // Filtros de estado para el mapa
+    let html = `
+        <div class="skill-tree-toolbar">
+            <div class="skill-tree-filter-chips">
+                <button class="skill-filter-chip ${skillTreeCurrentFilter === 'all' ? 'active' : ''}" onclick="setSkillTreeFilter('all')">
+                    Todos (${topics.length})
+                </button>
+                <button class="skill-filter-chip chip-mastered ${skillTreeCurrentFilter === 'mastered' ? 'active' : ''}" onclick="setSkillTreeFilter('mastered')">
+                    Dominados (${countMastered})
+                </button>
+                <button class="skill-filter-chip chip-progress ${skillTreeCurrentFilter === 'progress' ? 'active' : ''}" onclick="setSkillTreeFilter('progress')">
+                    En Progreso (${countProgress})
+                </button>
+                <button class="skill-filter-chip chip-pending ${skillTreeCurrentFilter === 'pending' ? 'active' : ''}" onclick="setSkillTreeFilter('pending')">
+                    Por Estudiar (${countPending})
+                </button>
+            </div>
+            <div class="skill-tree-legend">
+                <span class="legend-item"><span class="legend-dot dot-mastered"></span> ≥75% Dominado</span>
+                <span class="legend-item"><span class="legend-dot dot-progress"></span> 25-74% En Progreso</span>
+                <span class="legend-item"><span class="legend-dot dot-pending"></span> &lt;25% Por Iniciar</span>
+            </div>
+        </div>
 
-    const positions = [];
-    topics.forEach((t, i) => {
-        const row = Math.floor(i / columns);
-        const colInRow = i % columns;
-        // Efecto serpiente para conexiones más orgánicas en lectura izquierda-derecha
-        const col = (row % 2 === 0) ? colInRow : (columns - 1 - colInRow);
+        <div class="skill-tree-flow-list">
+    `;
 
-        const x = 50 + col * (nodeWidth + gapX);
-        const y = 50 + row * (nodeHeight + gapY);
-        positions.push({ x, y, width: nodeWidth, height: nodeHeight });
-    });
-
-    const totalWidth = 50 + columns * (nodeWidth + gapX);
-    const totalHeight = 50 + (Math.ceil(topics.length / columns)) * (nodeHeight + gapY) + 40;
-
-    // Generar conexiones SVG (Curvas Bézier con flechas direccionales)
-    let connectionsSvg = '';
-    for (let i = 0; i < topics.length - 1; i++) {
-        const p1 = positions[i];
-        const p2 = positions[i + 1];
-
-        const startX = p1.x + p1.width / 2;
-        const startY = p1.y + p1.height / 2;
-        const endX = p2.x + p2.width / 2;
-        const endY = p2.y + p2.height / 2;
-
-        const deltaY = endY - startY;
-        const deltaX = endX - startX;
-
-        // Si están en la misma fila
-        let pathD = '';
-        if (Math.abs(deltaY) < 10) {
-            const cpX = (startX + endX) / 2;
-            pathD = `M ${startX} ${startY} L ${endX} ${endY}`;
-        } else {
-            // Conexión curva en cambio de fila
-            const cpY = startY + deltaY / 2;
-            pathD = `M ${startX} ${startY} C ${startX} ${cpY}, ${endX} ${cpY}, ${endX} ${endY}`;
+    // Renderizar cada tema como una tarjeta editorial estructurada y legible
+    topicStats.forEach((st, idx) => {
+        if (skillTreeCurrentFilter !== 'all' && st.status !== skillTreeCurrentFilter) {
+            return;
         }
 
-        const isMastered = topicStats[i].status === 'mastered';
-        const strokeColor = isMastered ? '#10b981' : (topicStats[i].status === 'progress' ? '#f59e0b' : '#94a3b8');
-
-        connectionsSvg += `
-            <path d="${pathD}" fill="none" stroke="${strokeColor}" stroke-width="2.5" stroke-dasharray="${isMastered ? 'none' : '5,5'}" marker-end="url(#treeArrow)" opacity="0.75" />
-        `;
-    }
-
-    // Generar Nodos SVG interactivos
-    let nodesSvg = '';
-    topicStats.forEach((st, idx) => {
-        const pos = positions[idx];
         const t = st.topic;
-        const statusColors = {
-            mastered: { border: '#10b981', bg: 'var(--card-bg, #ffffff)', badgeBg: '#d1fae5', badgeText: '#065f46', label: 'Dominado' },
-            progress: { border: '#f59e0b', bg: 'var(--card-bg, #ffffff)', badgeBg: '#fef3c7', badgeText: '#92400e', label: 'En Progreso' },
-            pending: { border: '#94a3b8', bg: 'var(--card-bg, #ffffff)', badgeBg: '#f1f5f9', badgeText: '#475569', label: 'Por Estudiar' }
+        const statusConfig = {
+            mastered: {
+                label: 'Dominado',
+                badgeClass: 'status-mastered',
+                barColor: '#10b981',
+                icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+            },
+            progress: {
+                label: 'En Progreso',
+                badgeClass: 'status-progress',
+                barColor: '#f59e0b',
+                icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`
+            },
+            pending: {
+                label: 'Por Estudiar',
+                badgeClass: 'status-pending',
+                barColor: '#94a3b8',
+                icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>`
+            }
         };
-        const style = statusColors[st.status] || statusColors.pending;
 
-        nodesSvg += `
-            <g class="skill-tree-node" transform="translate(${pos.x}, ${pos.y})" onclick="selectSkillTreeNode('${t.id}')" style="cursor: pointer;">
-                <!-- Fondo de la Tarjeta del Nodo -->
-                <rect width="${pos.width}" height="${pos.height}" rx="12" fill="${style.bg}" stroke="${style.border}" stroke-width="2.2" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.06))" />
-                
-                <!-- Barra superior de acento coloreada -->
-                <rect width="${pos.width}" height="4" rx="2" fill="${style.border}" />
+        const sc = statusConfig[st.status] || statusConfig.pending;
+        const isSelected = selectedSkillTopicId === t.id ? 'is-selected' : '';
 
-                <!-- Círculo con Número de Tema -->
-                <circle cx="28" cy="38" r="16" fill="${style.badgeBg}" stroke="${style.border}" stroke-width="1.5" />
-                <text x="28" y="43" text-anchor="middle" font-size="12" font-weight="800" fill="${style.badgeText}">${st.index}</text>
+        html += `
+            <div class="skill-flow-step ${isSelected}" onclick="selectSkillTreeNode('${t.id}')">
+                <div class="skill-step-stem">
+                    <div class="skill-step-marker ${sc.badgeClass}">
+                        ${st.index}
+                    </div>
+                    ${idx < topicStats.length - 1 ? '<div class="skill-step-line"></div>' : ''}
+                </div>
 
-                <!-- Título del Tema -->
-                <text x="54" y="32" font-size="12.5" font-weight="700" fill="var(--text-heading, #1e293b)" width="${pos.width - 65}">
-                    ${sanitizeHTML((t.name || 'Tema').slice(0, 24))}${(t.name || '').length > 24 ? '…' : ''}
-                </text>
+                <div class="skill-topic-card card-${st.status}">
+                    <div class="skill-card-top">
+                        <div class="skill-card-header-left">
+                            <span class="skill-topic-num">TEMA ${st.index < 10 ? '0' + st.index : st.index}</span>
+                            <h3 class="skill-topic-name">${sanitizeHTML(t.name || 'Tema')}</h3>
+                        </div>
+                        <div class="skill-card-status-badge ${sc.badgeClass}">
+                            ${sc.icon}
+                            <span>${sc.label}</span>
+                        </div>
+                    </div>
 
-                <!-- Subtítulo / Métricas -->
-                <text x="54" y="50" font-size="10.5" fill="var(--text-muted, #64748b)">
-                    ${st.totalEx} ${st.totalEx === 1 ? 'ejercicio' : 'ejercicios'} • ${st.percent}% dominio
-                </text>
+                    <div class="skill-card-progress-bar-wrap">
+                        <div class="skill-card-progress-bar" style="width: ${st.percent}%; background: ${sc.barColor};"></div>
+                    </div>
 
-                <!-- Badge de Estado -->
-                <rect x="54" y="58" width="85" height="18" rx="9" fill="${style.badgeBg}" />
-                <text x="96" y="71" text-anchor="middle" font-size="9.5" font-weight="800" fill="${style.badgeText}">${style.label}</text>
-
-                <!-- Barra de progreso individual -->
-                <rect x="${pos.width - 70}" y="62" width="55" height="8" rx="4" fill="#e2e8f0" />
-                <rect x="${pos.width - 70}" y="62" width="${Math.max(4, (55 * st.percent) / 100)}" height="8" rx="4" fill="${style.border}" />
-            </g>
+                    <div class="skill-card-meta-grid">
+                        <div class="skill-meta-pill">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                            <span><strong>${st.masteredEx}/${st.totalEx}</strong> ejercicios dominados</span>
+                        </div>
+                        <div class="skill-meta-pill">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                            <span><strong>${st.checklistCount}</strong> fórmulas de checklist</span>
+                        </div>
+                        <div class="skill-meta-pill">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                            <span><strong>${st.percent}%</strong> de dominio</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
     });
 
-    if (svgContainer) {
-        svgContainer.innerHTML = `
-            <svg viewBox="0 0 ${totalWidth} ${totalHeight}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style="min-width: 100%; min-height: 480px;">
-                <defs>
-                    <marker id="treeArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
-                    </marker>
-                </defs>
-                ${connectionsSvg}
-                ${nodesSvg}
-            </svg>
-        `;
+    html += `</div>`; // fin skill-tree-flow-list
+
+    if (container) {
+        container.innerHTML = html;
     }
 
-    // Seleccionar automáticamente el primer tema en el panel lateral de detalles
-    if (topics.length > 0) {
+    // Seleccionar por defecto el primer tema
+    if (topics.length > 0 && !selectedSkillTopicId) {
         selectSkillTreeNode(topics[0].id);
+    } else if (selectedSkillTopicId) {
+        selectSkillTreeNode(selectedSkillTopicId);
+    }
+}
+
+/**
+ * Cambia el filtro activo del árbol.
+ */
+function setSkillTreeFilter(filter) {
+    skillTreeCurrentFilter = filter;
+    const subjects = (appDB && Array.isArray(appDB.subjects)) ? appDB.subjects : [];
+    const activeSubj = subjects.find(sub => sub.id === activeSubjectId) || subjects[0];
+    if (activeSubj) {
+        renderSkillTreeGraph(activeSubj);
     }
 }
 
@@ -235,6 +253,11 @@ function renderSkillTreeGraph(subject) {
  */
 function selectSkillTreeNode(topicId) {
     selectedSkillTopicId = topicId;
+
+    // Resaltar visualmente la tarjeta seleccionada
+    document.querySelectorAll('.skill-flow-step').forEach(el => {
+        el.classList.remove('is-selected');
+    });
 
     const subjects = (appDB && Array.isArray(appDB.subjects)) ? appDB.subjects : [];
     const activeSubj = subjects.find(sub => sub.id === activeSubjectId) || subjects[0];
@@ -248,9 +271,9 @@ function selectSkillTreeNode(topicId) {
     if (!detailBox) return;
 
     const statusBadges = {
-        mastered: '<span style="color:#065f46; background:#d1fae5; padding:2px 8px; border-radius:999px; font-weight:700; font-size:0.75rem;">Dominado (≥75%)</span>',
-        progress: '<span style="color:#92400e; background:#fef3c7; padding:2px 8px; border-radius:999px; font-weight:700; font-size:0.75rem;">En Progreso (25%-74%)</span>',
-        pending: '<span style="color:#475569; background:#f1f5f9; padding:2px 8px; border-radius:999px; font-weight:700; font-size:0.75rem;">Por Estudiar (&lt;25%)</span>'
+        mastered: '<span class="status-badge-inline status-mastered">🟢 Dominado (≥75%)</span>',
+        progress: '<span class="status-badge-inline status-progress">🟡 En Progreso (25%-74%)</span>',
+        pending: '<span class="status-badge-inline status-pending">⚪ Por Estudiar (&lt;25%)</span>'
     };
 
     const exList = (topic.data && Array.isArray(topic.data.ejercicios)) ? topic.data.ejercicios : [];
@@ -259,44 +282,59 @@ function selectSkillTreeNode(topicId) {
     detailBox.innerHTML = `
         <div class="skill-detail-card">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-heading);">${sanitizeHTML(topic.name)}</h3>
+                <div>
+                    <span style="font-size: 0.7rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em;">Ficha del Tema</span>
+                    <h3 style="margin: 2px 0 0; font-size: 1.15rem; color: var(--text-heading); font-weight: 800; line-height: 1.35;">${sanitizeHTML(topic.name)}</h3>
+                </div>
                 ${statusBadges[stats.status] || ''}
             </div>
 
-            <div style="margin-top: 10px;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">
-                    <span>Nivel de Dominio</span>
+            <div style="margin-top: 14px; background: var(--bg-alt); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">
+                    <span style="color: var(--text-heading);">Nivel Global de Dominio</span>
                     <span style="color: var(--primary);">${stats.percent}%</span>
                 </div>
                 <div style="width: 100%; height: 8px; background: var(--border-color); border-radius: 4px; overflow: hidden;">
-                    <div style="width: ${stats.percent}%; height: 100%; background: var(--primary); border-radius: 4px;"></div>
+                    <div style="width: ${stats.percent}%; height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.3s ease;"></div>
                 </div>
             </div>
 
-            <div class="skill-metrics-row" style="display: flex; gap: 10px; margin-top: 14px;">
-                <div class="skill-metric-pill" style="flex: 1; padding: 8px; background: var(--bg-alt); border-radius: 8px; text-align: center;">
-                    <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-heading);">${stats.totalEx}</div>
-                    <div style="font-size: 0.7rem; color: var(--text-muted);">Ejercicios (${stats.masteredEx} dominados)</div>
+            <!-- Métricas Claras y Explicadas -->
+            <div class="skill-metrics-row" style="display: flex; gap: 8px; margin-top: 12px;">
+                <div class="skill-metric-pill" style="flex: 1; padding: 10px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; text-align: center;">
+                    <div style="font-size: 1.2rem; font-weight: 900; color: var(--text-heading);">${stats.totalEx}</div>
+                    <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-body); margin-top: 2px;">Problemas Prácticos</div>
+                    <div style="font-size: 0.66rem; color: var(--text-muted);">${stats.masteredEx} dominados</div>
                 </div>
-                <div class="skill-metric-pill" style="flex: 1; padding: 8px; background: var(--bg-alt); border-radius: 8px; text-align: center;">
-                    <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-heading);">${checklist.length}</div>
-                    <div style="font-size: 0.7rem; color: var(--text-muted);">Conceptos Teóricos</div>
+                <div class="skill-metric-pill" style="flex: 1; padding: 10px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; text-align: center;">
+                    <div style="font-size: 1.2rem; font-weight: 900; color: var(--text-heading);">${checklist.length}</div>
+                    <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-body); margin-top: 2px;">Checklist Teórico</div>
+                    <div style="font-size: 0.66rem; color: var(--text-muted);">Fórmulas y conceptos</div>
                 </div>
             </div>
 
-            ${checklist.length > 0 ? `
-                <div style="margin-top: 14px;">
-                    <strong style="font-size: 0.82rem; color: var(--text-heading);">Conceptos Clave del Tema:</strong>
-                    <ul style="margin: 4px 0 0; padding-left: 18px; font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
-                        ${checklist.slice(0, 4).map(c => `<li>${sanitizeHTML(typeof c === 'string' ? c.split(':')[0] : (c.title || c.text || 'Concepto'))}</li>`).join('')}
-                        ${checklist.length > 4 ? `<li><em>+${checklist.length - 4} conceptos más...</em></li>` : ''}
+            <!-- Checklist Teórico Explicado -->
+            <div style="margin-top: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="font-size: 0.8rem; color: var(--text-heading);">Fórmulas y Conceptos Clave:</strong>
+                    <span style="font-size: 0.68rem; color: var(--text-muted);">Checklist de Teoría</span>
+                </div>
+                <p style="font-size: 0.72rem; color: var(--text-muted); margin: 3px 0 6px; line-height: 1.4;">
+                    Definiciones, propiedades y teoremas del tema extraídos para preguntas cortas de examen:
+                </p>
+                ${checklist.length > 0 ? `
+                    <ul class="skill-detail-checklist">
+                        ${checklist.slice(0, 5).map(c => `<li>${sanitizeHTML(typeof c === 'string' ? c.split(':')[0] : (c.title || c.text || 'Concepto'))}</li>`).join('')}
+                        ${checklist.length > 5 ? `<li style="list-style: none; color: var(--primary); font-weight: 600;">+${checklist.length - 5} conceptos más en el tema...</li>` : ''}
                     </ul>
-                </div>
-            ` : ''}
+                ` : `
+                    <div style="font-size: 0.76rem; color: var(--text-muted); font-style: italic;">No hay conceptos de checklist registrados en este tema.</div>
+                `}
+            </div>
 
-            <!-- Botones de Acción Inmediata -->
+            <!-- Botones de Acción Directa -->
             <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 8px;">
-                <button class="btn btn-primary" style="width: 100%; padding: 10px; font-size: 0.85rem; font-weight: 700;" onclick="jumpToSkillTopic('${topic.id}')">
+                <button class="btn btn-primary" style="width: 100%; padding: 10px; font-size: 0.85rem; font-weight: 800;" onclick="jumpToSkillTopic('${topic.id}')">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
                     <span>Abrir y Estudiar este Tema</span>
                 </button>
@@ -306,7 +344,7 @@ function selectSkillTreeNode(topicId) {
                         <span>Flashcards</span>
                     </button>
                     <button class="btn btn-secondary" style="flex: 1; padding: 8px; font-size: 0.78rem;" onclick="launchExamForTopic('${topic.id}')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                         <span>Simulacro A4</span>
                     </button>
                 </div>
